@@ -1,6 +1,7 @@
 package org.maple.profitsystem.utils;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import org.maple.profitsystem.constants.CommonConstants;
@@ -9,8 +10,13 @@ public class TradingDateUtil {
 
 	@SuppressWarnings("deprecation")
 	public static int betweenTradingDays(Date start, Date end) {
-		if(start == null)
+		if(start == null || end == null)
 			return 0;
+		
+		if(start.after(end)) {
+			return -betweenTradingDays(end, start);
+		}
+		
 		// eliminate the hour, minute and second's effect
 		start.setHours(0);
 		start.setMinutes(0);
@@ -71,5 +77,19 @@ public class TradingDateUtil {
 	public static Integer convertDate2NumDate(Date date) {
 		DateFormat df = new SimpleDateFormat (CommonConstants.DATE_FORMAT_OUT);
 		return Integer.valueOf(df.format(date));
+	}
+	
+	/**
+	 * Check whether market was already opend in the date.
+	 * 
+	 * @param date
+	 * @return
+	 */
+	public static boolean hasMarketOpened(Calendar date) {
+		if(date.get(Calendar.HOUR_OF_DAY) < 16) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 }

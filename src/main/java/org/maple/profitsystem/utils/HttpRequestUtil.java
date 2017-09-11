@@ -15,13 +15,13 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.exceptions.PSException;
 
 public class HttpRequestUtil {
-	private static Logger logger = Logger.getLogger(HttpRequestUtil.class);
+	//private static Logger logger = Logger.getLogger(HttpRequestUtil.class);
 	
-	private static final int BUFFER_SIZE_OF_RECEIVE = 524288;	// 512 * 1024
+	
 	
 	private static String commonMethod(String url, Map<String, String> propertyMap, String data, String method) throws PSException {
 		String result = "";
@@ -55,9 +55,9 @@ public class HttpRequestUtil {
 			} else {
 				conn.connect();
 			}
-            // 定义 BufferedReader输入流来读取URL的响应
+  
             in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            char[] buffer = new char[BUFFER_SIZE_OF_RECEIVE];
+            char[] buffer = new char[CommonConstants.BUFFER_SIZE_OF_READER];
             int countOnce = 0;
             while ((countOnce = in.read(buffer)) != -1) {
                 result += String.copyValueOf(buffer, 0, countOnce);
@@ -81,11 +81,37 @@ public class HttpRequestUtil {
         return result;				
 	}
 	
-	public static String getMethod(String url, Map<String, String> propertyMap) throws PSException {
-		return HttpRequestUtil.commonMethod(url, propertyMap, null, "GET");
+	public static String getMethod(String url, Map<String, String> propertyMap, int retryTime) throws PSException {
+		boolean requestSuccess = false;
+		String response = null;
+		for(int i = 0; i < retryTime && !requestSuccess; i++) {
+			try {
+				response = HttpRequestUtil.commonMethod(url, propertyMap, null, "GET");
+				requestSuccess = true;
+			} catch (PSException e1) {
+			}
+		}
+		if(!requestSuccess){
+			throw new PSException("Get request failed: Reach the max number of retries " + retryTime);
+		}
+		
+		return response;
 	}
 	
-	public static String postMethod(String url, Map<String, String> propertyMap, String data) throws PSException {
-		return HttpRequestUtil.commonMethod(url, propertyMap, data, "POST");
+	public static String postMethod(String url, Map<String, String> propertyMap, String data, int retryTime) throws PSException {
+		boolean requestSuccess = false;
+		String response = null;
+		for(int i = 0; i < retryTime && !requestSuccess; i++) {
+			try {
+				response = HttpRequestUtil.commonMethod(url, propertyMap, data, "POST");
+				requestSuccess = true;
+			} catch (PSException e1) {
+			}
+		}
+		if(!requestSuccess){
+			throw new PSException("Post request failed: Reach the max number of retries "+ retryTime);
+		}
+		
+		return response;
 	}
 }
