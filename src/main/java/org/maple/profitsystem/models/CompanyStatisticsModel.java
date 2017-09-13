@@ -2,46 +2,44 @@ package org.maple.profitsystem.models;
 
 public class CompanyStatisticsModel {
 
-	private double insiderOwnPerc;
+	private Double insiderOwnPerc;
 	
-	private double instOwnPerc;
+	private Double instOwnPerc;
 	
-	private int shsOutstand;
+	private Integer shsOutstand;
 	
-	private int shsFloat;
-
-	public double getInsiderOwnPerc() {
+	private Integer shsFloat;
+	
+	public Double getInsiderOwnPerc() {
 		return insiderOwnPerc;
 	}
 
-	public void setInsiderOwnPerc(double insiderOwnPerc) {
+	public void setInsiderOwnPerc(Double insiderOwnPerc) {
 		this.insiderOwnPerc = insiderOwnPerc;
 	}
 
-	public double getInstOwnPerc() {
+	public Double getInstOwnPerc() {
 		return instOwnPerc;
 	}
 
-	public void setInstOwnPerc(double instOwnPerc) {
+	public void setInstOwnPerc(Double instOwnPerc) {
 		this.instOwnPerc = instOwnPerc;
 	}
 
-	public int getShsOutstand() {
+	public Integer getShsOutstand() {
 		return shsOutstand;
 	}
 
-	public void setShsOutstand(int shsOutstand) {
+	public void setShsOutstand(Integer shsOutstand) {
 		this.shsOutstand = shsOutstand;
 	}
 
-	public int getShsFloat() {
+	public Integer getShsFloat() {
 		return shsFloat;
 	}
 
-	public void setShsFloat(int shsFloat) {
+	public void setShsFloat(Integer shsFloat) {
 		this.shsFloat = shsFloat;
 	}
-	
-	
-	
+
 }
