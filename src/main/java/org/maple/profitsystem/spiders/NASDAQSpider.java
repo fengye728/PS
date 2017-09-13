@@ -68,7 +68,7 @@ public class NASDAQSpider {
 		// parse response and get quote list
 		String[] records = responseStr.split(CommonConstants.CSV_NEWLINE_REG);
 		if(records.length <= 5) {
-			throw new PSException("Content of response for getting " + company.getSymbol() + " error: " + responseStr);
+			throw new PSException(company.getSymbol() + ": Content of quote list error!");
 		}
 		for(int i = 2; i < records.length; ++i) {
 			try {

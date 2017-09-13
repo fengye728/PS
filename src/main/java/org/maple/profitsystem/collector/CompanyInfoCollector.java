@@ -108,6 +108,7 @@ public class CompanyInfoCollector {
 		try {
 			newestList = NASDAQSpider.fetchCompanyListWithBaseInfo();
 			targetList.addAll(newestList);
+			
 			// remove duplicate objects
 			HashSet<CompanyInfoModel> set = new HashSet<>(targetList);
 			List<CompanyInfoModel> result = new ArrayList<>(set);
@@ -132,14 +133,14 @@ public class CompanyInfoCollector {
 				// update detail info
 				updateCompanyDetailInfoByCompany(company);
 				
-				// persist
-				company.persist(persistOption);
-				
 				logger.info("Update success - " + company.getSymbol() + " | Count:" + company.getQuoteList().size());
 			} catch (PSException e) {
 				failedList.add(company);
 				logger.error("Updated fail - " + company.getSymbol() + ":" + e.getMessage());
 			}
+			// persist
+			// TODO need to improve
+			company.persist(persistOption);
 		}
 		logger.error("Amount of failed Companies:" + failedList.size());
 	}

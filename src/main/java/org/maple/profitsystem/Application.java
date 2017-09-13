@@ -30,16 +30,13 @@ public class Application {
 		
 		// set time zone of EST
 		TimeZone.setDefault(TimeZone.getTimeZone("America/New_York"));
-		
-//		Calendar now = Calendar.getInstance();
-//		now.add(Calendar.DAY_OF_MONTH, -20);
-//		
-//		System.out.print(now.getTime());
 	}
 	
 	public static void main(String[] argv) throws IOException {
 		init();
 		logger.info("Startup Profit System...");
 		CompanyInfoCollector.getAndUpdateCompanyFullInfoList(CommonConstants.LOAD_OPTION_DISK, CommonConstants.PERSIST_OPTION_DISK);
+		
+		logger.info("Stop Profit System!");
 	}
 }
