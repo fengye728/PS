@@ -36,4 +36,6 @@ public class EVBBSystem {
 	public static EVBBSystemResult evaluate(CompanyInfoModel company) {
 		return null;
 	}
+	
+	
 }

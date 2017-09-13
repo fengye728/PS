@@ -9,25 +9,56 @@ package org.maple.profitsystem.collector;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.maple.profitsystem.constants.CommonConstants;
+import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyInfoModel;
-import org.maple.profitsystem.models.StockQuoteModel;
+import org.maple.profitsystem.spiders.FINVIZSpider;
+import org.maple.profitsystem.spiders.NASDAQSpider;
 import org.maple.profitsystem.utils.CSVUtil;
-import org.maple.profitsystem.utils.HttpRequestUtil;
-import org.maple.profitsystem.utils.TradingDateUtil;
 
 public class CompanyInfoCollector {
 	
 	private static Logger logger = Logger.getLogger(CompanyInfoCollector.class);
 	
-	private final static int REQUEST_MAX_RETRY_TIMES = 5; 
+	public static List<CompanyInfoModel> getAndUpdateCompanyFullInfoList(int loadOption, int persistOption) {
+ 		
+		List<CompanyInfoModel> companyList = loadFullCompanyInfoList(loadOption);
+		//List<CompanyInfoModel> companyList = new ArrayList<>();
+		
+		updateCompanyBaseInfoByCompanyList(companyList);
+		
+		updateCompanyDetailInfoByCompanyList(companyList, persistOption);
+		
+		return companyList;
+	}
+	
+	
+	private static List<CompanyInfoModel> loadFullCompanyInfoList(int loadOption) {
+		List<CompanyInfoModel> result = null;
+		switch(loadOption) {
+		case CommonConstants.LOAD_OPTION_DISK:
+			result = loadFullCompanyInfoListFromDisk();
+			break;
+		case CommonConstants.LOAD_OPTION_DATABASE:
+			result = loadFullCompanyInfoListFromDatabase();
+			break;
+		}
+		return result;
+	}
+	
+	/**
+	 * Load a list of full company info from database.
+	 * @return
+	 */
+	private static List<CompanyInfoModel> loadFullCompanyInfoListFromDatabase() {
+		// TODO 
+		return null;
+	}
 	
 	/**
 	 * Load a list of full company info from disk.
@@ -35,161 +66,138 @@ public class CompanyInfoCollector {
 	 * @param companyListPath The parent directory path of the list of company file.
 	 * @return List of full company info
 	 */
-	public static List<CompanyInfoModel> loadFullCompanyInfoListFromDisk(String companyListPath) {
+	private static List<CompanyInfoModel> loadFullCompanyInfoListFromDisk() {
+		// For debug
+		long lastTime = System.currentTimeMillis();
+		
 		List<CompanyInfoModel> result = new ArrayList<>();
-		File path = new File(companyListPath);
+		File path = new File(CommonConstants.PATH_COMPANY_INFO_OUTPUT);
 		if(path.exists()) {
 			File[] diskFiles = path.listFiles();
-			for(File diskFile : diskFiles) {
-				String csv = CSVUtil.readFileContent(diskFile);
+			
+			String[] contents = new String[diskFiles.length];
+			for(int i = 0; i < diskFiles.length; ++i) {
+				contents[i] = CSVUtil.readFileContent(diskFiles[i]);
+
+			}
+			
+			for(int i = 0; i < contents.length; ++i) {
 				try {
-					CompanyInfoModel fullCompanyInfo = CompanyInfoModel.parseFullFromFileCSV(csv);
+					CompanyInfoModel fullCompanyInfo = CompanyInfoModel.parseFullFromFileCSV(contents[i]);
 					result.add(fullCompanyInfo);
 				} catch (PSException e) {
-					logger.error("Load " + diskFile.getName() + " failed!");
+					logger.error("Load " + diskFiles[i].getName() + " failed!");
 				}
+				
 			}
-		}
-		return result;
-	}
-	
-	/**
-	 * Fetch a list of companies from nasdaq.
-	 * 
-	 * @return List of CompanyInfoModel, otherwise a empty list.
-	 * @throws PSException
-	 */
-	public static List<CompanyInfoModel> fetchCompanyInfoListFromNasdaq() {
-		List<CompanyInfoModel> result = new ArrayList<>();
-		String response = null;
-		
-		try {
-			response = HttpRequestUtil.getMethod(CommonConstants.URL_GET_COMPANY_LIST_NASDAQ, null, REQUEST_MAX_RETRY_TIMES);
-		} catch (PSException e1) {
-			logger.error(e1.getMessage());
-			return result;
-		}
 
-		String[] lines = response.split(CommonConstants.NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD);
-		for(int i = 1; i < lines.length; ++i) {
-			try{
-				result.add(CompanyInfoModel.parseFromTransportCSV(lines[i]));
-			} catch(Exception e) {
-				// This company is which for nasdaq test or had been bankrupted.
-				logger.error("Invalid company: " + lines[i]);
-			}
 		}
+		
+		logger.info("Count of company loading from disk:" + result.size() + "|" + "Cost time: " + ((System.currentTimeMillis() - lastTime) / 1000));
 		return result;
 	}
 	
 	/**
-	 * Fetch all newest stock quotes of which company in companyList.
+	 * Update the list of the target company info(just with base info).
+	 * @param targetList
+	 * @return
+	 * @throws HttpException
+	 */
+	private static void updateCompanyBaseInfoByCompanyList(List<CompanyInfoModel> targetList){
+		List<CompanyInfoModel> newestList = null;
+		try {
+			newestList = NASDAQSpider.fetchCompanyListWithBaseInfo();
+			targetList.addAll(newestList);
+			// remove duplicate objects
+			HashSet<CompanyInfoModel> set = new HashSet<>(targetList);
+			List<CompanyInfoModel> result = new ArrayList<>(set);
+			targetList.clear();
+			targetList.addAll(result);
+			
+			logger.info("Update company base info success");
+		} catch (HttpException e) {
+			logger.error("Update company base info fail: " + e.getMessage());
+		}
+	}
+	
+	/**
+	 * Update the quotes list and statistics info of companies in companyList.
 	 * 
 	 * @param companyList
 	 */
-	public static void fetchNewestStockQuotesByCompanyList(List<CompanyInfoModel> companyList) {
+	private static void updateCompanyDetailInfoByCompanyList(List<CompanyInfoModel> companyList, int persistOption) {
 		List<CompanyInfoModel> failedList = new ArrayList<>();
 		for(CompanyInfoModel company : companyList) {
 			try {
-				// add newest quotes into quote list
-				company.addNewestQuoteList(fetchNewestStockQuotesByCompany(company));
+				// update detail info
+				updateCompanyDetailInfoByCompany(company);
 				
-				logger.info("Fetch success: " + company.getSymbol());
+				// persist
+				company.persist(persistOption);
+				
+				logger.info("Update success - " + company.getSymbol() + " | Count:" + company.getQuoteList().size());
 			} catch (PSException e) {
 				failedList.add(company);
-				logger.error("Fetch newest stock quotes failed: " + company.getSymbol());
+				logger.error("Updated fail - " + company.getSymbol() + ":" + e.getMessage());
 			}
-			company.persist2Disk(CommonConstants.STOCK_QUOTES_OUTPUT_PATH);
 		}
 		logger.error("Amount of failed Companies:" + failedList.size());
 	}
 	
 	/**
-	 * Fetch the stock quotes newer than all of quotes in CompanyInfoModel.quoteList.
+	 * Update the statistics info and quote list of the specified company.
 	 * 
 	 * @param company
-	 * @return List of StockQuoteModel
 	 * @throws PSException
 	 */
-	public static List<StockQuoteModel> fetchNewestStockQuotesByCompany(CompanyInfoModel company) throws PSException {
-		List<StockQuoteModel> result = new ArrayList<>();
-		String responseStr = postStockQuotesStr(company.getSymbol(), company.getLastQuoteDt());
-		if(responseStr == null)
-			return result;
+	private static void updateCompanyDetailInfoByCompany(CompanyInfoModel company) throws PSException {
+		boolean isGetQuoteList = true;
+		boolean isGetStatistic = true;
 		
-		// parse response and get quote list
-		String[] records = responseStr.split(CommonConstants.NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD);
-		for(int i = 2; i < records.length; ++i) {
-			try {
-				StockQuoteModel tmp = StockQuoteModel.parseFromTransportCSV(company.getSymbol(), records[i]);
-				// check whether the quote existed 
-				if(tmp.getQuoteDate() <= company.getLastQuoteDt()) {
-					break;
-				} else {
-					result.add(tmp);
-				}
-			} catch (PSException e) {
-				logger.error(company.getSymbol() + ": " + records[i]);
-			}
-		}
-		return result;
-	}
-	
-	private static String combineStockQuotesUrl(String symbol) {
-		return CommonConstants.URL_GET_STOCK_QUOTES_NASDAQ_PREFIX + symbol.toLowerCase() + CommonConstants.URL_GET_STOCK_QUOTES_NASDAQ_SUFFIX;
-	}
-	
-	/**
-	 * Get string response for getting stock quotes from startDt to now date by http post method. 
-	 * 
-	 * @param symbol
-	 * @param startDt
-	 * @return
-	 * @throws PSException
-	 */
-	private static String postStockQuotesStr(String symbol, Integer startDt) throws PSException {
-		final String DATA_FIELD_FIVE_DAY = "5d";
-		final int FIVE_DAY_DAYS = 5;
-		final String DATA_FIELD_SIX_MONTH = "6m";
-		final int SIX_MONTH_DAYS = 150;
-		final String DATA_FIELD_ONE_YEAR = "1y";
-		final int ONE_YEAR_DAYS = 365;
-		final String DATA_FIELD_TEN_YEAR = "10y";
-		
-		String fieldDate = null;
-		if(startDt <= 0) {
-			fieldDate = DATA_FIELD_TEN_YEAR;
-		} else {
-			Calendar now = Calendar.getInstance();
-			if(!TradingDateUtil.hasMarketOpened(now)) {
-				now.add(Calendar.DAY_OF_MONTH, -1);
-			}
-			int intervalTradingDays = TradingDateUtil.betweenTradingDays(TradingDateUtil.convertNumDate2Date(startDt), now.getTime());
-			if(intervalTradingDays <= 0) {
-				return null;
-			} else if(intervalTradingDays < FIVE_DAY_DAYS) {
-				fieldDate = DATA_FIELD_FIVE_DAY;
-			} else if(intervalTradingDays < SIX_MONTH_DAYS) {
-				fieldDate = DATA_FIELD_SIX_MONTH;
-			} else if(intervalTradingDays < ONE_YEAR_DAYS) {
-				fieldDate = DATA_FIELD_ONE_YEAR;
-			} else {
-				fieldDate = DATA_FIELD_TEN_YEAR;
-			}
-		}
-		
-		String baseUrl = CompanyInfoCollector.combineStockQuotesUrl(symbol);
-		String postData = fieldDate + "|true|" + symbol.toUpperCase();
-		Map<String, String> propertyMap = new HashMap<>();
-		propertyMap.put("Content-Type", "application/json");
-		
-		String result = null;
+		// add newest quotes into quote list
 		try {
-			result = HttpRequestUtil.postMethod(baseUrl, propertyMap, postData, REQUEST_MAX_RETRY_TIMES);
-		} catch (PSException e1) {
-			throw new PSException("Request for fetching stock quotes fail: " + symbol);
+			company.addNewestQuoteList(NASDAQSpider.fetchNewestStockQuotesByCompany(company));
+		} catch (PSException e) {
+			logger.error(e.getMessage());
+			isGetQuoteList = false;
+		} catch (HttpException e) {
+			// TODO Use alternative web site
+			logger.error(e.getMessage());
+			
+			// can not get info to do this
+			isGetQuoteList = false;
 		}
-
-		return result;
+		
+		// get company statistics info
+		try {
+			company.setStatistics(FINVIZSpider.fetchCompanyStatistics(company.getSymbol()));
+		} catch (PSException e) {
+			logger.error(e.getMessage());
+			isGetStatistic = false;
+		} catch (HttpException e) {
+			// TODO Use alternative web site
+			logger.error(e.getMessage());
+			
+			// can not get info to do this
+			isGetStatistic = false;
+		}
+		
+		
+		if(isGetQuoteList && isGetStatistic) {
+			return ;
+		} else {
+			final String FAIL_GET_QUOTE_LIST = "Failed to fetch quote list";
+			final String FAIL_GET_STATISTICS = "Failed to fetch statistic";
+			final String SEPRATOR = " | ";
+			String error = "";
+			if(!isGetQuoteList){
+				error += FAIL_GET_QUOTE_LIST + SEPRATOR;
+			}
+			if(!isGetStatistic) {
+				error += FAIL_GET_STATISTICS;
+			}
+			throw new PSException(error);
+		}
 	}
+	
 }

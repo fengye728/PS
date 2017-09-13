@@ -22,7 +22,14 @@ public class CommonConstants {
 	public final static String CSV_NEWLINE_REG = "[\r]?\n";
 	
 	
+	// ---------------- Load and Persist Option ----------------------------------
+	public final static int PERSIST_OPTION_DISK = 1;
 	
+	public final static int PERSIST_OPTION_DATABASE = 2;
+	
+	public final static int LOAD_OPTION_DISK = 1;
+	
+	public final static int LOAD_OPTION_DATABASE = 2;
 	
 	// --------------- NASDAQ CONSTANTS -------------------------- 
 	public final static String NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD = ",[\r]?\n";
@@ -39,8 +46,8 @@ public class CommonConstants {
 	public final static String URL_GET_COMPANY_STATISTICS_FINVIZ = "https://www.finviz.com/quote.ashx?t=";
 	
 	
-	// Path
-	public final static String LOGGER_PROPERTY_PATH = "log4j.properties";
+	// ------------------------ Path --------------------------------
+	public final static String PATH_LOGGER_PROPERTY = "log4j.properties";
 	
-	public final static String STOCK_QUOTES_OUTPUT_PATH = "StockQuotes\\";
+	public final static String PATH_COMPANY_INFO_OUTPUT = "StockQuotes\\";
 }

@@ -15,6 +15,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.maple.profitsystem.constants.CommonConstants;
+import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyInfoModel;
 import org.maple.profitsystem.models.StockQuoteModel;
@@ -31,27 +32,23 @@ public class NASDAQSpider {
 	 * Fetch a list of companies from nasdaq.
 	 * 
 	 * @return List of CompanyInfoModel, otherwise a empty list.
-	 * @throws PSException
+	 * @throws HttpException 
 	 */
-	public static List<CompanyInfoModel> fetchCompanyListWithBaseInfo() {
+	public static List<CompanyInfoModel> fetchCompanyListWithBaseInfo() throws HttpException {
 		List<CompanyInfoModel> result = new ArrayList<>();
 		
-		try {
-			String response = HttpRequestUtil.getMethod(CommonConstants.URL_GET_COMPANY_LIST_NASDAQ, null, REQUEST_MAX_RETRY_TIMES);
-			String[] lines = response.split(CommonConstants.NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD);
-			for(int i = 1; i < lines.length; ++i) {
-				try{
-					result.add(CompanyInfoModel.parseFromTransportCSV(lines[i]));
-				} catch(Exception e) {
-					// This company is which for nasdaq test or had been bankrupted.
-					logger.error("Invalid company: " + lines[i]);
-				}
+		String response = HttpRequestUtil.getMethod(CommonConstants.URL_GET_COMPANY_LIST_NASDAQ, null, REQUEST_MAX_RETRY_TIMES);
+		String[] lines = response.split(CommonConstants.NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD);
+		for(int i = 1; i < lines.length; ++i) {
+			try{
+				result.add(CompanyInfoModel.parseFromTransportCSV(lines[i]));
+			} catch(Exception e) {
+				// This company is which for nasdaq test or had been bankrupted.
+				logger.error("Invalid company: " + lines[i]);
 			}
-			return result;
-		} catch (PSException e1) {
-			logger.error(e1.getMessage());
-			return result;
 		}
+		return result;
+
 	}
 	
 	/**
@@ -60,15 +57,19 @@ public class NASDAQSpider {
 	 * @param company
 	 * @return List of StockQuoteModel
 	 * @throws PSException
+	 * @throws HttpException 
 	 */
-	public static List<StockQuoteModel> fetchNewestStockQuotesByCompany(CompanyInfoModel company) throws PSException {
+	public static List<StockQuoteModel> fetchNewestStockQuotesByCompany(CompanyInfoModel company) throws PSException, HttpException {
 		List<StockQuoteModel> result = new ArrayList<>();
 		String responseStr = fetchHistoricalQuotes(company.getSymbol(), company.getLastQuoteDt());
 		if(responseStr == null)
 			return result;
 		
 		// parse response and get quote list
-		String[] records = responseStr.split(CommonConstants.NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD);
+		String[] records = responseStr.split(CommonConstants.CSV_NEWLINE_REG);
+		if(records.length <= 5) {
+			throw new PSException("Content of response for getting " + company.getSymbol() + " error: " + responseStr);
+		}
 		for(int i = 2; i < records.length; ++i) {
 			try {
 				StockQuoteModel tmp = StockQuoteModel.parseFromTransportCSV(company.getSymbol(), records[i]);
@@ -79,7 +80,7 @@ public class NASDAQSpider {
 					result.add(tmp);
 				}
 			} catch (PSException e) {
-				logger.error(company.getSymbol() + ": " + records[i]);
+				logger.error("Parse a quote record failed - " + company.getSymbol() + ": " + records[i]);
 			}
 		}
 		return result;
@@ -91,9 +92,9 @@ public class NASDAQSpider {
 	 * @param symbol
 	 * @param startDt
 	 * @return
-	 * @throws PSException
+	 * @throws HttpException 
 	 */
-	private static String fetchHistoricalQuotes(String symbol, Integer startDt) throws PSException {
+	private static String fetchHistoricalQuotes(String symbol, Integer startDt) throws HttpException {
 		final String DATA_FIELD_FIVE_DAY = "5d";
 		final int FIVE_DAY_DAYS = 5;
 		final String DATA_FIELD_SIX_MONTH = "6m";
@@ -129,14 +130,7 @@ public class NASDAQSpider {
 		Map<String, String> propertyMap = new HashMap<>();
 		propertyMap.put("Content-Type", "application/json");
 		
-		String result = null;
-		try {
-			result = HttpRequestUtil.postMethod(baseUrl, propertyMap, postData, REQUEST_MAX_RETRY_TIMES);
-		} catch (PSException e1) {
-			throw new PSException("Request for fetching stock quotes fail: " + symbol);
-		}
-
-		return result;
+		return HttpRequestUtil.postMethod(baseUrl, propertyMap, postData, REQUEST_MAX_RETRY_TIMES);
 	}
 	
 	/**

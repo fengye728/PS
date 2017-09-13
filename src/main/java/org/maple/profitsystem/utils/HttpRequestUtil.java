@@ -16,14 +16,12 @@ import java.net.URL;
 import java.util.Map;
 
 import org.maple.profitsystem.constants.CommonConstants;
-import org.maple.profitsystem.exceptions.PSException;
+import org.maple.profitsystem.exceptions.HttpException;
 
 public class HttpRequestUtil {
 	//private static Logger logger = Logger.getLogger(HttpRequestUtil.class);
 	
-	
-	
-	private static String commonMethod(String url, Map<String, String> propertyMap, String data, String method) throws PSException {
+	private static String commonMethod(String url, Map<String, String> propertyMap, String data, String method) throws IOException {
 		String result = "";
 		
         BufferedReader in = null;
@@ -62,9 +60,10 @@ public class HttpRequestUtil {
             while ((countOnce = in.read(buffer)) != -1) {
                 result += String.copyValueOf(buffer, 0, countOnce);
             }
-			
+            return result;
+            
 		} catch (IOException e) {
-			throw new PSException(e.getMessage());
+			throw e;
 		}
         finally {
             try {
@@ -78,38 +77,42 @@ public class HttpRequestUtil {
                 e2.printStackTrace();
             }
         }
-        return result;				
+        
 	}
 	
-	public static String getMethod(String url, Map<String, String> propertyMap, int retryTime) throws PSException {
+	public static String getMethod(String url, Map<String, String> propertyMap, int retryTime) throws HttpException {
 		boolean requestSuccess = false;
 		String response = null;
+		String exceptionMsg = null;
 		for(int i = 0; i < retryTime && !requestSuccess; i++) {
 			try {
 				response = HttpRequestUtil.commonMethod(url, propertyMap, null, "GET");
 				requestSuccess = true;
-			} catch (PSException e1) {
+			} catch (IOException e1) {
+				exceptionMsg = e1.getMessage();
 			}
 		}
 		if(!requestSuccess){
-			throw new PSException("Get request failed: Reach the max number of retries " + retryTime);
+			throw new HttpException(url, "GET", retryTime, exceptionMsg);
 		}
 		
 		return response;
 	}
 	
-	public static String postMethod(String url, Map<String, String> propertyMap, String data, int retryTime) throws PSException {
+	public static String postMethod(String url, Map<String, String> propertyMap, String data, int retryTime) throws HttpException {
 		boolean requestSuccess = false;
 		String response = null;
+		String exceptionMsg = null;
 		for(int i = 0; i < retryTime && !requestSuccess; i++) {
 			try {
 				response = HttpRequestUtil.commonMethod(url, propertyMap, data, "POST");
 				requestSuccess = true;
-			} catch (PSException e1) {
+			} catch (IOException e1) {
+				exceptionMsg = e1.getMessage();
 			}
 		}
 		if(!requestSuccess){
-			throw new PSException("Post request failed: Reach the max number of retries "+ retryTime);
+			throw new HttpException(url, "POST", retryTime, exceptionMsg);
 		}
 		
 		return response;

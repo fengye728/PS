@@ -35,55 +35,20 @@ public class CompanyInfoModel{
 	
 	private Integer lastQuoteDt = 0;	// yyyyMMdd
 	
+	private CompanyStatisticsModel statistics = new CompanyStatisticsModel();
+	
 	private List<StockQuoteModel> quoteList = new ArrayList<>();
 	
-	/*
-	private static double parseMarketCapFieldFromString(String strMarCap) {
-		double number = Double.valueOf(strMarCap.substring(1, strMarCap.length() - 1));
-		int multiplier = 0;
-		switch(Character.toUpperCase(strMarCap.charAt(strMarCap.length() - 1))) {
-		case 'K':
-			multiplier = 1000;
-			break;
-		case 'M':
-			multiplier = 1000000;
-			break;
-		case 'B':
-			multiplier = 1000000000;
-			break;
-		}
-		return number * multiplier;
-	}
-	*/
-	
 	/**
-	 * Add newest quote list into quoteList and update lastQuoteDt.
-	 * 
-	 * @param newestList
+	 * Persist into disk.
 	 */
-	public void addNewestQuoteList(List<StockQuoteModel> newestList) {
-		if(null == newestList || newestList.isEmpty()) {
-			return ;
-		}
-		quoteList.addAll(newestList);
-		Collections.sort(quoteList);
-		// update lastQuoteDt
-		if(quoteList.size() > 0) {
-			this.lastQuoteDt = quoteList.get(quoteList.size() - 1).getQuoteDate();
-		}
-	}
-	
-	/**
-	 * 
-	 * @param outPath
-	 */
-	public void persist2Disk(String outPath) {
+	private void persist2Disk() {
 		String filename = this.symbol;
 		
 		FileWriter fw = null;
 		try {
 			
-			File file = new File(outPath + filename);
+			File file = new File(CommonConstants.PATH_COMPANY_INFO_OUTPUT + filename);
 			if(!file.exists())
 				file.createNewFile();
 			fw = new FileWriter(file);
@@ -107,13 +72,51 @@ public class CompanyInfoModel{
 	}
 	
 	/**
+	 * Persist into database.
+	 */
+	private void persist2Database() {
+		
+	}
+	
+	public void persist(int persistOption) {
+		switch(persistOption) {
+		case CommonConstants.PERSIST_OPTION_DISK:
+			this.persist2Disk();
+			break;
+		case CommonConstants.PERSIST_OPTION_DATABASE:
+			this.persist2Database();
+			break;
+		}
+	}
+	
+	/**
+	 * Add newest quote list into quoteList and update lastQuoteDt.
+	 * 
+	 * @param newestList
+	 */
+	public void addNewestQuoteList(List<StockQuoteModel> newestList) {
+		if(null == newestList || newestList.isEmpty()) {
+			return ;
+		}
+		quoteList.addAll(newestList);
+		Collections.sort(quoteList);
+		
+		// update lastQuoteDt
+		if(quoteList.size() > 0) {
+			this.lastQuoteDt = quoteList.get(quoteList.size() - 1).getQuoteDate();
+		}
+	}
+	
+	/**
 	 * Format full CompanyInfoModel(with quote list) to a csv string.
 	 * 
 	 * @return A csv string.
 	 */
 	public String formatFullCSV() {
 		
-		String companySummary = this.toString() + CommonConstants.CSV_NEWLINE + CommonConstants.CSV_NEWLINE;
+		String companySummary = this.toString() + CommonConstants.CSV_NEWLINE;
+		
+		String companyStatistics = this.statistics.toString() + CommonConstants.CSV_NEWLINE;
 		
 		StringBuilder quotes = new StringBuilder();
 		// write quotes
@@ -121,7 +124,7 @@ public class CompanyInfoModel{
 			quotes.append(quote.toString() + CommonConstants.CSV_NEWLINE);
 		}
 		
-		return companySummary + quotes.toString();
+		return companySummary + companyStatistics + quotes.toString();
 	}
 	
 	/**
@@ -135,7 +138,9 @@ public class CompanyInfoModel{
 		String[] lines = csv.split(CommonConstants.CSV_NEWLINE_REG);
 		CompanyInfoModel result = CompanyInfoModel.parseBaseFromFileCSV(lines[0]);
 		
-		List<StockQuoteModel> quotes = new ArrayList<>();
+		result.setStatistics(CompanyStatisticsModel.parseFromFileCSV(lines[1]));
+		
+		List<StockQuoteModel> quotes = new ArrayList<>(lines.length);
 		for(int i = 2; i < lines.length; ++i) {
 			try {
 				quotes.add(StockQuoteModel.parseFromFileCSV(lines[i]));
@@ -284,5 +289,13 @@ public class CompanyInfoModel{
 
 	public void setQuoteList(List<StockQuoteModel> quoteList) {
 		this.quoteList = quoteList;
+	}
+
+	public CompanyStatisticsModel getStatistics() {
+		return statistics;
+	}
+
+	public void setStatistics(CompanyStatisticsModel statistics) {
+		this.statistics = statistics;
 	}
 }

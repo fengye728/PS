@@ -9,23 +9,21 @@ package org.maple.profitsystem;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.TimeZone;
 
+import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.maple.profitsystem.collector.CompanyInfoCollector;
 import org.maple.profitsystem.constants.CommonConstants;
-import org.maple.profitsystem.models.CompanyInfoModel;
 
 public class Application {
+	private static Logger logger = Logger.getLogger(Application.class);
 	
 	static void init() {
 		// init logger
-		PropertyConfigurator.configure(CommonConstants.LOGGER_PROPERTY_PATH);
+		PropertyConfigurator.configure(CommonConstants.PATH_LOGGER_PROPERTY);
 		// create stock quote directory
-		File stockQuotesDir = new File(CommonConstants.STOCK_QUOTES_OUTPUT_PATH);
+		File stockQuotesDir = new File(CommonConstants.PATH_COMPANY_INFO_OUTPUT);
 		if(!stockQuotesDir.exists()) {
 			stockQuotesDir.mkdirs();
 		}
@@ -39,26 +37,9 @@ public class Application {
 //		System.out.print(now.getTime());
 	}
 	
-	static List<CompanyInfoModel> updateAll() {
-		List<CompanyInfoModel> listOld = CompanyInfoCollector.loadFullCompanyInfoListFromDisk(CommonConstants.STOCK_QUOTES_OUTPUT_PATH);
-		List<CompanyInfoModel> listNew = CompanyInfoCollector.fetchCompanyInfoListFromNasdaq();
-		
-		listOld.addAll(listNew);
-		// remove duplicate objects
-		HashSet<CompanyInfoModel> set = new HashSet<>(listOld);
-		List<CompanyInfoModel> result = new ArrayList<>(set);
-		
-		
-		CompanyInfoCollector.fetchNewestStockQuotesByCompanyList(result);
-		return result;
-	}
-	
 	public static void main(String[] argv) throws IOException {
 		init();
-		
-		List<CompanyInfoModel> list = updateAll();
-		
-		System.out.println(list);
-	
+		logger.info("Startup Profit System...");
+		CompanyInfoCollector.getAndUpdateCompanyFullInfoList(CommonConstants.LOAD_OPTION_DISK, CommonConstants.PERSIST_OPTION_DISK);
 	}
 }
