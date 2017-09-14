@@ -70,6 +70,7 @@ public class CompanyInfoCollector {
 		// For debug
 		long lastTime = System.currentTimeMillis();
 		
+		logger.info("Start to load full company info list from disk...");
 		List<CompanyInfoModel> result = new ArrayList<>();
 		File path = new File(CommonConstants.PATH_COMPANY_INFO_OUTPUT);
 		if(path.exists()) {

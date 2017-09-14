@@ -138,7 +138,8 @@ public class CompanyInfoModel{
 		String[] lines = csv.split(CommonConstants.CSV_NEWLINE_REG);
 		CompanyInfoModel result = CompanyInfoModel.parseBaseFromFileCSV(lines[0]);
 		
-		result.setStatistics(CompanyStatisticsModel.parseFromFileCSV(lines[1]));
+		if(lines.length >= 2)
+			result.setStatistics(CompanyStatisticsModel.parseFromFileCSV(lines[1]));
 		
 		List<StockQuoteModel> quotes = new ArrayList<>(lines.length);
 		for(int i = 2; i < lines.length; ++i) {

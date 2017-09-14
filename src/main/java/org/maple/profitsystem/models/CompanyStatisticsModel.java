@@ -1,7 +1,6 @@
 package org.maple.profitsystem.models;
 
 import org.maple.profitsystem.constants.CommonConstants;
-import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.utils.CSVUtil;
 
 public class CompanyStatisticsModel {
@@ -22,7 +21,7 @@ public class CompanyStatisticsModel {
 				+ shsFloat + CommonConstants.CSV_SURROUNDER_OF_FIELD;
 	}
 	
-	public static CompanyStatisticsModel parseFromFileCSV(String csvRecord) throws PSException {
+	public static CompanyStatisticsModel parseFromFileCSV(String csvRecord){
 		String[] fields = CSVUtil.splitCSVRecord(csvRecord);
 		try{
 			CompanyStatisticsModel result = new CompanyStatisticsModel();
@@ -34,7 +33,9 @@ public class CompanyStatisticsModel {
 			
 			return result;
 		} catch(Exception e) {
-			throw new PSException(e.getMessage());
+			// TODO just for compatibility
+			return new CompanyStatisticsModel();
+			//throw new PSException(e.getMessage());
 		}
 	}
 	
