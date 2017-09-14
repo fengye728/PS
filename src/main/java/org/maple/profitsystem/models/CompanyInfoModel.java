@@ -39,6 +39,20 @@ public class CompanyInfoModel{
 	
 	private List<StockQuoteModel> quoteList = new ArrayList<>();
 	
+	
+	public int getQuoteIndex(int targetDt) {
+		int result = -1;
+		for(int i = quoteList.size() - 1; i >= 0; --i) {
+			if(targetDt > quoteList.get(i).getQuoteDate()) {
+				break;
+			} else if(targetDt == quoteList.get(i).getQuoteDate()) {
+				result = i;
+				break;
+			}
+		}
+		return result;
+	}
+	
 	/**
 	 * Persist into disk.
 	 */

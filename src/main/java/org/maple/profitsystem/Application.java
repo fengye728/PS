@@ -15,7 +15,9 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.maple.profitsystem.collector.CompanyInfoCollector;
 import org.maple.profitsystem.constants.CommonConstants;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication
 public class Application {
 	private static Logger logger = Logger.getLogger(Application.class);
 	

@@ -28,8 +28,12 @@ public class StockQuoteModel implements Comparable<StockQuoteModel>{
 	 */
 	@Override
 	public int compareTo(StockQuoteModel o) {
-		return -TradingDateUtil.betweenTradingDays(TradingDateUtil.convertNumDate2Date(this.getQuoteDate()), 
-				TradingDateUtil.convertNumDate2Date(o.getQuoteDate()));
+		if(symbol.equals(o.getSymbol())) {
+			return -TradingDateUtil.betweenTradingDays(TradingDateUtil.convertNumDate2Date(this.getQuoteDate()), 
+					TradingDateUtil.convertNumDate2Date(o.getQuoteDate()));
+		} else {
+			return -1;
+		}
 	}
 	
 	/**
