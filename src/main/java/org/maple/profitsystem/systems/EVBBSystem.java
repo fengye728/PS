@@ -9,7 +9,7 @@ package org.maple.profitsystem.systems;
 
 import java.util.List;
 
-import org.maple.profitsystem.models.CompanyInfoModel;
+import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.models.StockQuoteModel;
 import org.maple.profitsystem.utils.TAUtil;
 
@@ -28,7 +28,7 @@ public class EVBBSystem {
 	 * @param company
 	 * @return
 	 */
-	public static EVBBSystemResult analyze(CompanyInfoModel company) {
+	public static EVBBSystemResult analyze(CompanyModel company) {
 		// TODO
 		return null;
 	}
@@ -39,12 +39,12 @@ public class EVBBSystem {
 	 * @param company
 	 * @return
 	 */
-	public static EVBBSystemResult evaluate(CompanyInfoModel company) {
+	public static EVBBSystemResult evaluate(CompanyModel company) {
 		return null;
 	}
 	
 	
-	private boolean testInsiderOwnership(CompanyInfoModel company) {
+	private boolean testInsiderOwnership(CompanyModel company) {
 		final int THRESHOLD = 10;
 		if(company.getStatistics().getInsiderOwnPerc() != null && company.getStatistics().getInsiderOwnPerc() >= THRESHOLD) {
 			return true;
@@ -53,7 +53,7 @@ public class EVBBSystem {
 		}
 	}
 	
-	private boolean testSharesFloat(CompanyInfoModel company) {
+	private boolean testSharesFloat(CompanyModel company) {
 		final int THRESHOLD = 35000000;
 		if(company.getStatistics().getInsiderOwnPerc() != null && company.getStatistics().getShsFloat() <= THRESHOLD) {
 			return true;
@@ -62,12 +62,12 @@ public class EVBBSystem {
 		}
 	}
 	
-	private boolean testNews(CompanyInfoModel company, int targetDate) {
+	private boolean testNews(CompanyModel company, int targetDate) {
 		// TODO 
 		return false;
 	}
 	
-	private boolean testResistanceVolume(CompanyInfoModel company, int targetIndex) {
+	private boolean testResistanceVolume(CompanyModel company, int targetIndex) {
 		final int PAST_YEAR_DAYS = 260;
 		final int MULTIPLE_THRESHOLD = 2;
 		final int SMA_DAYS = 50;
@@ -83,7 +83,7 @@ public class EVBBSystem {
 		}
 	}
 	
-	private boolean testSpikePriceHigh(CompanyInfoModel company, int targetIndex) {
+	private boolean testSpikePriceHigh(CompanyModel company, int targetIndex) {
 		final int DAYS_OF_MAX_HIGH_PRICE = 60;
 		List<StockQuoteModel> quotes = company.getQuoteList();
 		if(quotes.get(targetIndex).getClose() > TAUtil.MaxHighPriceByIndex(quotes, targetIndex - 1, DAYS_OF_MAX_HIGH_PRICE)) {
@@ -93,7 +93,7 @@ public class EVBBSystem {
 		}
 	}
 	
-	private boolean testSMAVolume(CompanyInfoModel company, int targetIndex) {
+	private boolean testSMAVolume(CompanyModel company, int targetIndex) {
 		final int VOLUME_THRESHOLD = 300000;
 		final int SMA_DAYS = 50;
 		
@@ -104,7 +104,7 @@ public class EVBBSystem {
 		}
 	}
 	
-	private boolean testSameDayUp(CompanyInfoModel company, int targetIndex) {
+	private boolean testSameDayUp(CompanyModel company, int targetIndex) {
 		StockQuoteModel quote = company.getQuoteList().get(targetIndex);
 		if(quote.getOpen() < quote.getClose()) {
 			return true;
@@ -113,7 +113,7 @@ public class EVBBSystem {
 		}
 	}
 	
-	private boolean testBeforeDayUp(CompanyInfoModel company, int targetIndex) {
+	private boolean testBeforeDayUp(CompanyModel company, int targetIndex) {
 		StockQuoteModel curQuote = company.getQuoteList().get(targetIndex);
 		StockQuoteModel beforeQuote = company.getQuoteList().get(targetIndex - 1);
 		if(beforeQuote.getClose() < curQuote.getClose()) {
@@ -123,7 +123,7 @@ public class EVBBSystem {
 		}
 	}
 	
-	private boolean testPriceLowLimit(CompanyInfoModel company, int targetIndex) {
+	private boolean testPriceLowLimit(CompanyModel company, int targetIndex) {
 		final double LOW_PRICE = 2.0;
 		StockQuoteModel curQuote = company.getQuoteList().get(targetIndex);
 		if(LOW_PRICE < curQuote.getClose()) {
@@ -133,7 +133,7 @@ public class EVBBSystem {
 		}
 	}
 	
-	private boolean testPriceHighLimit(CompanyInfoModel company, int targetIndex) {
+	private boolean testPriceHighLimit(CompanyModel company, int targetIndex) {
 		final double HIGH_PRICE = 25.0;
 		StockQuoteModel curQuote = company.getQuoteList().get(targetIndex);
 		if(HIGH_PRICE > curQuote.getClose()) {
@@ -143,7 +143,7 @@ public class EVBBSystem {
 		}
 	}
 	
-	private boolean testVolume(CompanyInfoModel company, int targetIndex) {
+	private boolean testVolume(CompanyModel company, int targetIndex) {
 		final int VOLUME_TIMES = 3;
 		StockQuoteModel curQuote = company.getQuoteList().get(targetIndex);
 		StockQuoteModel beforeQuote = company.getQuoteList().get(targetIndex - 1);
@@ -154,7 +154,7 @@ public class EVBBSystem {
 		}
 	}
 	
-	private boolean testEMAAndSMA(CompanyInfoModel company, int targetIndex) {
+	private boolean testEMAAndSMA(CompanyModel company, int targetIndex) {
 		final double SMA_TIMES = 1.5;
 		final int EMA_SMA_DAYS = 50;
 		List<StockQuoteModel> quotes = company.getQuoteList();

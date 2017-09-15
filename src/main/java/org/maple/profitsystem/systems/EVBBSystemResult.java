@@ -1,10 +1,10 @@
 package org.maple.profitsystem.systems;
 
-import org.maple.profitsystem.models.CompanyInfoModel;
+import org.maple.profitsystem.models.CompanyModel;
 
 public class EVBBSystemResult {
 	
-	private CompanyInfoModel company;
+	private CompanyModel company;
 	
 	private int satisfiedDayIndex;
 	// ---------- Fundamental favors --------------------
@@ -33,11 +33,11 @@ public class EVBBSystemResult {
 	
 	private boolean emaSmaCorelative;
 
-	public CompanyInfoModel getCompany() {
+	public CompanyModel getCompany() {
 		return company;
 	}
 
-	public void setCompany(CompanyInfoModel company) {
+	public void setCompany(CompanyModel company) {
 		this.company = company;
 	}
 

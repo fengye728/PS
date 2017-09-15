@@ -12,12 +12,13 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
-import org.maple.profitsystem.models.CompanyInfoModel;
+import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.models.StockQuoteModel;
 import org.maple.profitsystem.utils.HttpRequestUtil;
 import org.maple.profitsystem.utils.TradingDateUtil;
@@ -34,22 +35,25 @@ public class NASDAQSpider {
 	 * @return List of CompanyInfoModel, otherwise a empty list.
 	 * @throws HttpException 
 	 */
-	public static List<CompanyInfoModel> fetchCompanyListWithBaseInfo() throws HttpException {
-		List<CompanyInfoModel> result = new ArrayList<>();
+	public static List<CompanyModel> fetchCompanyListWithBaseInfo() throws HttpException {
+		final CharSequence INVALID_COMPANY_CHAR = "^";
+		
+		List<CompanyModel> result = new ArrayList<>();
 		
 		String response = HttpRequestUtil.getMethod(CommonConstants.URL_GET_COMPANY_LIST_NASDAQ, null, REQUEST_MAX_RETRY_TIMES);
 		String[] lines = response.split(CommonConstants.NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD);
 		for(int i = 1; i < lines.length; ++i) {
 			try{
-				result.add(CompanyInfoModel.parseFromTransportCSV(lines[i]));
+				result.add(CompanyModel.parseFromTransportCSV(lines[i]));
 			} catch(Exception e) {
 				// This company is which for nasdaq test or had been bankrupted.
 				logger.error("Invalid company: " + lines[i]);
 			}
 		}
-		return result;
-
+		// filter invalid company
+		return result.stream().filter(company -> !company.getSymbol().contains(INVALID_COMPANY_CHAR)).collect(Collectors.toList());
 	}
+	
 	
 	/**
 	 * Fetch the stock quotes newer than all of quotes in CompanyInfoModel.quoteList.
@@ -59,7 +63,7 @@ public class NASDAQSpider {
 	 * @throws PSException
 	 * @throws HttpException 
 	 */
-	public static List<StockQuoteModel> fetchNewestStockQuotesByCompany(CompanyInfoModel company) throws PSException, HttpException {
+	public static List<StockQuoteModel> fetchNewestStockQuotesByCompany(CompanyModel company) throws PSException, HttpException {
 		List<StockQuoteModel> result = new ArrayList<>();
 		String responseStr = fetchHistoricalQuotes(company.getSymbol(), company.getLastQuoteDt());
 		if(responseStr == null)
@@ -72,7 +76,7 @@ public class NASDAQSpider {
 		}
 		for(int i = 2; i < records.length; ++i) {
 			try {
-				StockQuoteModel tmp = StockQuoteModel.parseFromTransportCSV(company.getSymbol(), records[i]);
+				StockQuoteModel tmp = StockQuoteModel.parseFromTransportCSV(records[i]);
 				// check whether the quote existed 
 				if(tmp.getQuoteDate() <= company.getLastQuoteDt()) {
 					break;

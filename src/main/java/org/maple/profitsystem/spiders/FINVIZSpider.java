@@ -18,12 +18,22 @@ public class FINVIZSpider {
 	
 	private final static String INST_OWN_REG = "Inst Own</td>.*?<b>(.*?)</b>";
 	
+	private final static String SHS_OUTSTAND_REG = "Inst Own</td>.*?<b>(.*?)</b>";
+	
 	private final static String SHS_FLOAT_REG = "Shs Float</td>.*?<b>(.*?)</b>";
 	
 	private static String getURLOfCompanyStatistics(String symbol) {
 		return URL_GET_COMPANY_STATISTICS_FINVIZ + symbol;
 	}
 
+	/**
+	 * Fetch the statistics of the specified company by symbol.
+	 * 
+	 * @param symbol
+	 * @return
+	 * @throws HttpException
+	 * @throws PSException
+	 */
 	public static CompanyStatisticsModel fetchCompanyStatistics(String symbol) throws HttpException, PSException {
 		CompanyStatisticsModel result = new CompanyStatisticsModel();
 		String response = HttpRequestUtil.getMethod(getURLOfCompanyStatistics(symbol), null, MAX_RETRY_TIMES);
@@ -46,6 +56,8 @@ public class FINVIZSpider {
 			result.setInstOwnPerc(convertStringPerc2DoublePerc(tmpMatcher.group(1)));
 			++count;
 		}
+		
+		// TODO match shares outstanding
 		
 		// match float shares 
 		tmpMatcher = shsFloatPat.matcher(response);

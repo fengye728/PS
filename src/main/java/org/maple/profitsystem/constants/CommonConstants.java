@@ -9,27 +9,26 @@ package org.maple.profitsystem.constants;
 
 public class CommonConstants {
 	
+	// -------------- Startup Option
+	public final static String STARTUP_OPTION_FILE = "file";
 	
-	public static final int BUFFER_SIZE_OF_READER = 524288;	// 512 * 1024
+	public final static String STARTUP_OPTION_DB = "db";
+	
+	
+	public final static String NULL_STRING = "null";
+	
+	public final static int BUFFER_SIZE_OF_READER = 524288;	// 512 * 1024
 	
 	public final static String DATE_FORMAT_OUT = "yyyyMMdd";
 	public final static String DATE_FORMAT_NASDAQ_IN = "yyyy/MM/dd";
 	
 	
+	// ---------------- CSV ------------------------------
 	public final static String CSV_SEPRATOR_BETWEEN_FIELD = "\",\"";
 	public final static String CSV_SURROUNDER_OF_FIELD = "\"";
 	public final static String CSV_NEWLINE = "\n";
 	public final static String CSV_NEWLINE_REG = "[\r]?\n";
 	
-	
-	// ---------------- Load and Persist Option ----------------------------------
-	public final static int PERSIST_OPTION_DISK = 1;
-	
-	public final static int PERSIST_OPTION_DATABASE = 2;
-	
-	public final static int LOAD_OPTION_DISK = 1;
-	
-	public final static int LOAD_OPTION_DATABASE = 2;
 	
 	// --------------- NASDAQ CONSTANTS -------------------------- 
 	public final static String NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD = ",[\r]?\n";
