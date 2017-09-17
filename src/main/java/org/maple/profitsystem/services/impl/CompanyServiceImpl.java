@@ -5,17 +5,18 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.maple.profitsystem.constants.CommonConstants;
+import org.maple.profitsystem.ConfigProperties;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.mappers.CompanyModelMapper;
-import org.maple.profitsystem.mappers.CompanyStatisticsModelMapper;
-import org.maple.profitsystem.mappers.StockQuoteModelMapper;
 import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.models.StockQuoteModel;
 import org.maple.profitsystem.services.CompanyService;
+import org.maple.profitsystem.services.CompanyStatisticsService;
+import org.maple.profitsystem.services.StockQuoteService;
 import org.maple.profitsystem.utils.CSVUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,19 +24,22 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(value = "transactionManager", readOnly = true, rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
+@Transactional(value = "transactionManager", rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
 public class CompanyServiceImpl implements CompanyService {
 	
 	private static Logger logger = Logger.getLogger(CompanyServiceImpl.class);
 	
 	@Autowired
+	private ConfigProperties properties;
+	
+	@Autowired
 	private CompanyModelMapper companyModelMapper;
 	
 	@Autowired
-	private CompanyStatisticsModelMapper companyStatisticsModelMapper;
+	private CompanyStatisticsService companyStatisticsService;
 	
 	@Autowired
-	private StockQuoteModelMapper stockQuoteModelMapper;
+	private StockQuoteService stockQuoteService;
 
 	/**
 	 * Load a list of full company info from disk.
@@ -44,12 +48,13 @@ public class CompanyServiceImpl implements CompanyService {
 	 */
 	@Override
 	public List<CompanyModel> loadCompanyWithFullInfoListFromDisk() {
+		
 		// For counting time
 		long lastTime = System.currentTimeMillis();
 		
-		logger.info("Start to load full company info list from disk...");
+		logger.info("Loading full company info list from disk...");
 		List<CompanyModel> result = new ArrayList<>();
-		File path = new File(CommonConstants.PATH_COMPANY_INFO_OUTPUT);
+		File path = new File(properties.getBackupPath());
 		if(path.exists()) {
 			File[] diskFiles = path.listFiles();
 			
@@ -71,7 +76,7 @@ public class CompanyServiceImpl implements CompanyService {
 
 		}
 		
-		logger.info("Count of company loading from disk:" + result.size() + "|" + "Cost time: " + ((System.currentTimeMillis() - lastTime) / 1000));
+		logger.info("Loaded full company info list from disk completed! Count of companies:" + result.size() + "|" + "Cost time: " + ((System.currentTimeMillis() - lastTime) / 1000));
 		return result;
 	}
 	
@@ -85,7 +90,7 @@ public class CompanyServiceImpl implements CompanyService {
 		FileWriter fw = null;
 		try {
 			
-			File file = new File(CommonConstants.PATH_COMPANY_INFO_OUTPUT + filename);
+			File file = new File(properties.getBackupPath() + File.separator + filename);
 			if(!file.exists())
 				file.createNewFile();
 			fw = new FileWriter(file);
@@ -130,12 +135,13 @@ public class CompanyServiceImpl implements CompanyService {
 		if(null == record)  {
 			return 0;
 		}
+		// set date
+		record.setCreateDt(new Date());
+		record.setLastUpdateDt(new Date());
 		if(companyModelMapper.insert(record) == 0) {
 			return 0;
 		} else {
-			// set company id
-			record.getStatistics().setCompanyId(record.getId());
-			return companyStatisticsModelMapper.insert(record.getStatistics());
+			return companyStatisticsService.addCompanyStatistics(record.getStatistics());
 		}
 	}
 
@@ -144,6 +150,7 @@ public class CompanyServiceImpl implements CompanyService {
 		if(null == record) {
 			return 0;
 		}
+		record.setLastUpdateDt(new Date());
 		return companyModelMapper.updateByPrimaryKeySelective(record);
 	}
 
@@ -152,7 +159,6 @@ public class CompanyServiceImpl implements CompanyService {
 		if(records == null || records.isEmpty()) {
 			return 0;
 		} else {
-			// TODO real list
 			int count = 0;
 			for(CompanyModel record : records) {
 				count += addCompanyWithStatistics(record);
@@ -167,10 +173,7 @@ public class CompanyServiceImpl implements CompanyService {
 		if(0 == addCompanyWithStatistics(record))
 			return 0;
 		
-		for(StockQuoteModel quote : record.getQuoteList()) {
-			quote.setCompanyId(record.getId());
-		}
-		stockQuoteModelMapper.insertList(record.getQuoteList());
+		stockQuoteService.addStockQuoteList(record.getQuoteList());
 		return 1;
 	}
 
@@ -183,5 +186,28 @@ public class CompanyServiceImpl implements CompanyService {
 			count += addCompanyFullInfo(record);
 		}
 		return count;
+	}
+
+	@Override
+	public int updateCompanyWithQuotes(CompanyModel record) {
+		if(null == record) {
+			return 0;
+		}
+		List<StockQuoteModel> quotes = record.getQuoteList();
+		int count = stockQuoteService.addStockQuoteList(quotes);
+		if(count == 0) {
+			return 0;
+		} else {
+			record.setLastUpdateDt(new Date());
+			// set last quote date
+			record.setLastQuoteDt(quotes.get(quotes.size() - 1).getQuoteDate());
+			return this.updateCompany(record);
+		}
+	}
+
+	@Override
+	public List<CompanyModel> getAllCompaniesWithStatistics() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

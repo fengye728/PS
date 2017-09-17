@@ -18,6 +18,8 @@ public interface CompanyService {
 	// ------------------ Database Operations ---------------------
 	List<CompanyModel> getAllCompanies();
 	
+	List<CompanyModel> getAllCompaniesWithStatistics();
+	
 	int addCompanyFullInfo(CompanyModel record);
 	
 	int addListCompaniesFullInfo(List<CompanyModel> records);
@@ -27,6 +29,6 @@ public interface CompanyService {
 	int addListCompaniesWithStatistics(List<CompanyModel> records);
 	
 	int updateCompany(CompanyModel record);
-	
-	
+
+	int updateCompanyWithQuotes(CompanyModel record);
 }

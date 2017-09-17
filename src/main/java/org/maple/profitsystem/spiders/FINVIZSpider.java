@@ -18,7 +18,7 @@ public class FINVIZSpider {
 	
 	private final static String INST_OWN_REG = "Inst Own</td>.*?<b>(.*?)</b>";
 	
-	private final static String SHS_OUTSTAND_REG = "Inst Own</td>.*?<b>(.*?)</b>";
+	private final static String SHS_OUTSTAND_REG = "Shs Outstand</td>.*?<b>(.*?)</b>";
 	
 	private final static String SHS_FLOAT_REG = "Shs Float</td>.*?<b>(.*?)</b>";
 	
@@ -41,6 +41,7 @@ public class FINVIZSpider {
 		Pattern insiderOwnPat = Pattern.compile(INSIDER_OWN_REG);
 		Pattern instOwnPat = Pattern.compile(INST_OWN_REG);
 		Pattern shsFloatPat = Pattern.compile(SHS_FLOAT_REG);
+		Pattern shsOutstandPat = Pattern.compile(SHS_OUTSTAND_REG);
 		
 		int count = 0;
 		// match insider ownership
@@ -57,7 +58,12 @@ public class FINVIZSpider {
 			++count;
 		}
 		
-		// TODO match shares outstanding
+		// match shares outstanding
+		tmpMatcher = shsOutstandPat.matcher(response);
+		if(tmpMatcher.find()) {
+			result.setShsOutstand(converDisplayNum2Integer(tmpMatcher.group(1)));
+			++count;
+		}
 		
 		// match float shares 
 		tmpMatcher = shsFloatPat.matcher(response);
@@ -72,6 +78,12 @@ public class FINVIZSpider {
 		return result;
 	}
 	
+	/**
+	 * Convert string percent like 1.8%, -98,4% to Double percent like 1.8, -98.4.
+	 *  
+	 * @param perc
+	 * @return
+	 */
 	private static Double convertStringPerc2DoublePerc(String perc) {
 		try {
 			return Double.valueOf(perc.substring(0, perc.length() - 1));
@@ -79,8 +91,13 @@ public class FINVIZSpider {
 			return null;
 		}
 	}
-	
 
+	/**
+	 * Convert display number(for example: 1.8B, 85M) to Integer number.
+	 * 
+	 * @param dispNum
+	 * @return
+	 */
 	private static Integer converDisplayNum2Integer(String dispNum) {
 		try{
 			double number = Double.valueOf(dispNum.substring(0, dispNum.length() - 1));

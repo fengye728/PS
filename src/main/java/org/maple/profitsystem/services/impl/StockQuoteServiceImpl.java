@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(value = "transactionManager", readOnly = true, rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
+@Transactional(value = "transactionManager", rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
 public class StockQuoteServiceImpl implements StockQuoteService {
 
 	@Autowired
@@ -24,12 +24,20 @@ public class StockQuoteServiceImpl implements StockQuoteService {
 
 	@Override
 	public int addStockQuote(StockQuoteModel record) {
-		return stockQuoteModelMapper.insert(record);
+		if(null == record) {
+			return 0;
+		} else {
+			return stockQuoteModelMapper.insert(record);
+		}
 	}
 
 	@Override
 	public int addStockQuoteList(List<StockQuoteModel> records) {
-		return stockQuoteModelMapper.insertList(records);
+		if(records == null || records.isEmpty()) {
+			return 0;
+		} else {
+			return stockQuoteModelMapper.insertList(records);
+		}
 	}
 
 }

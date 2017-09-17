@@ -36,7 +36,8 @@ public class NASDAQSpider {
 	 * @throws HttpException 
 	 */
 	public static List<CompanyModel> fetchCompanyListWithBaseInfo() throws HttpException {
-		final CharSequence INVALID_COMPANY_CHAR = "^";
+		final CharSequence INVALID_COMPANY_CHAR_POWER = "^";
+		final CharSequence INVALID_COMPANY_CHAR_DOT = ".";
 		
 		List<CompanyModel> result = new ArrayList<>();
 		
@@ -51,7 +52,9 @@ public class NASDAQSpider {
 			}
 		}
 		// filter invalid company
-		return result.stream().filter(company -> !company.getSymbol().contains(INVALID_COMPANY_CHAR)).collect(Collectors.toList());
+		return result.stream()
+				.filter(company -> !company.getSymbol().contains(INVALID_COMPANY_CHAR_POWER) && !company.getSymbol().contains(INVALID_COMPANY_CHAR_DOT))
+				.collect(Collectors.toList());
 	}
 	
 	

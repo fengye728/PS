@@ -41,6 +41,7 @@ CREATE TABLE stock_quote
 	low double precision NOT NULL,
 	volume integer NOT NULL,
 	
+	CONSTRAINT stock_quote_pkey PRIMARY KEY (id),
 	CONSTRAINT stock_quote_unique UNIQUE(company_id, quote_date),
 	CONSTRAINT stock_quote_fk FOREIGN KEY(company_id) REFERENCES company(id)
 );

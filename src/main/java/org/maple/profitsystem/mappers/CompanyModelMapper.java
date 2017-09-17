@@ -59,5 +59,7 @@ public interface CompanyModelMapper {
      */
     List<CompanyModel> selectAll();
     
+    List<CompanyModel> selectAllWithStatistics();
+    
     int insertList(List<CompanyModel> records);
 }

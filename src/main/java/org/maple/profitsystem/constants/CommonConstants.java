@@ -9,16 +9,17 @@ package org.maple.profitsystem.constants;
 
 public class CommonConstants {
 	
-	// -------------- Startup Option
-	public final static String STARTUP_OPTION_FILE = "file";
-	
-	public final static String STARTUP_OPTION_DB = "db";
-	
-	
 	public final static String NULL_STRING = "null";
 	
 	public final static int BUFFER_SIZE_OF_READER = 524288;	// 512 * 1024
 	
+	// -------------- Startup Option ------------------------------
+	public final static String STARTUP_OPTION_NORMAL = "normal";
+	
+	public final static String STARTUP_OPTION_RECOVER = "recover";
+	
+	
+	// -------------- Date Format -----------------------------------
 	public final static String DATE_FORMAT_OUT = "yyyyMMdd";
 	public final static String DATE_FORMAT_NASDAQ_IN = "yyyy/MM/dd";
 	
@@ -44,9 +45,4 @@ public class CommonConstants {
 	// ----------------------- FINVIZ CONSTANTS ---------------------------------
 	public final static String URL_GET_COMPANY_STATISTICS_FINVIZ = "https://www.finviz.com/quote.ashx?t=";
 	
-	
-	// ------------------------ Path --------------------------------
-	public final static String PATH_LOGGER_PROPERTY = "log4j.properties";
-	
-	public final static String PATH_COMPANY_INFO_OUTPUT = "StockQuotes\\";
 }

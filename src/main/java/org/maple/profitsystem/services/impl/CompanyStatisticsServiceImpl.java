@@ -1,5 +1,7 @@
 package org.maple.profitsystem.services.impl;
 
+import java.util.Date;
+
 import org.maple.profitsystem.mappers.CompanyStatisticsModelMapper;
 import org.maple.profitsystem.models.CompanyStatisticsModel;
 import org.maple.profitsystem.services.CompanyStatisticsService;
@@ -9,7 +11,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(value = "transactionManager", readOnly = true, rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
+@Transactional(value = "transactionManager", rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
 public class CompanyStatisticsServiceImpl implements CompanyStatisticsService {
 
 	@Autowired
@@ -21,11 +23,20 @@ public class CompanyStatisticsServiceImpl implements CompanyStatisticsService {
 
 	@Override
 	public int addCompanyStatistics(CompanyStatisticsModel record) {
+		if(null == record) {
+			return 0;
+		}
+		record.setCreateDt(new Date());
+		record.setLastUpdateDt(new Date());
 		return companyStatisticsModelMapper.insert(record);
 	}
 
 	@Override
 	public int updateCompanyStatistics(CompanyStatisticsModel record) {
-		return companyStatisticsModelMapper.updateByPrimaryKeySelective(record);
+		if(null == record) {
+			return 0;
+		} 
+		record.setLastUpdateDt(new Date());
+		return companyStatisticsModelMapper.updateByCompanyIdSelective(record);
 	}
 }

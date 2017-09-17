@@ -7,6 +7,10 @@ import org.maple.profitsystem.utils.CSVUtil;
 
 public class CompanyStatisticsModel {
 	
+	public boolean isEmpty() {
+		return this.insiderOwnPerc == null && this.instOwnPerc == null && this.shsFloat == null && this.shsOutstand == null;
+	}
+	
 	/**
 	 * Set the properties of this using target.
 	 * 

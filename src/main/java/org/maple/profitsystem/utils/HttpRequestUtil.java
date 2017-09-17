@@ -83,17 +83,15 @@ public class HttpRequestUtil {
 	public static String getMethod(String url, Map<String, String> propertyMap, int retryTime) throws HttpException {
 		boolean requestSuccess = false;
 		String response = null;
-		String exceptionMsg = null;
 		for(int i = 0; i < retryTime && !requestSuccess; i++) {
 			try {
 				response = HttpRequestUtil.commonMethod(url, propertyMap, null, "GET");
 				requestSuccess = true;
 			} catch (IOException e1) {
-				exceptionMsg = e1.getMessage();
 			}
 		}
 		if(!requestSuccess){
-			throw new HttpException(url, "GET", retryTime, exceptionMsg);
+			throw new HttpException(url, "GET", retryTime);
 		}
 		
 		return response;
@@ -102,17 +100,15 @@ public class HttpRequestUtil {
 	public static String postMethod(String url, Map<String, String> propertyMap, String data, int retryTime) throws HttpException {
 		boolean requestSuccess = false;
 		String response = null;
-		String exceptionMsg = null;
 		for(int i = 0; i < retryTime && !requestSuccess; i++) {
 			try {
 				response = HttpRequestUtil.commonMethod(url, propertyMap, data, "POST");
 				requestSuccess = true;
 			} catch (IOException e1) {
-				exceptionMsg = e1.getMessage();
 			}
 		}
 		if(!requestSuccess){
-			throw new HttpException(url, "POST", retryTime, exceptionMsg);
+			throw new HttpException(url, "POST", retryTime);
 		}
 		
 		return response;
