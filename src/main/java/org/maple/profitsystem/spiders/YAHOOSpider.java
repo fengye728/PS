@@ -10,32 +10,22 @@ import org.maple.profitsystem.models.CompanyStatisticsModel;
 import org.maple.profitsystem.utils.CSVUtil;
 import org.maple.profitsystem.utils.HttpRequestUtil;
 
-public class FINVIZSpider {
+public class YAHOOSpider {
 	
 	private final static int MAX_RETRY_TIMES = 5;
 	
-	private final static String INSIDER_OWN_REG = "Insider Own</td>.*?<b>(.*?)</b>";
+	// -------------- Regular Expression of fields in Statistics ------------------------------
+	private final static String SHS_OUTSTAND_REG = ">Shares Outstanding</span>.*?<td.*?>(.*?)</td>";
 	
-	private final static String INST_OWN_REG = "Inst Own</td>.*?<b>(.*?)</b>";
+	private final static String SHS_FLOAT_REG = ">Float</span>.*?<td.*?>(.*?)</td>";
 	
-	private final static String SHS_OUTSTAND_REG = "Shs Outstand</td>.*?<b>(.*?)</b>";
+	private final static String INSIDER_OWN_REG = ">% Held by Insiders</span>.*?<td.*?>(.*?)</td>";
 	
-	private final static String SHS_FLOAT_REG = "Shs Float</td>.*?<b>(.*?)</b>";
+	private final static String INST_OWN_REG = ">% Held by Institutions</span>.*?<td.*?>(.*?)</td>";
 	
-	private static String getURLOfCompanyStatistics(String symbol) {
-		return CommonConstants.URL_GET_COMPANY_STATISTICS_FINVIZ + symbol;
-	}
-
-	/**
-	 * Fetch the statistics of the specified company by symbol.
-	 * 
-	 * @param symbol
-	 * @return
-	 * @throws HttpException
-	 * @throws PSException
-	 */
 	public static CompanyStatisticsModel fetchCompanyStatistics(String symbol) throws HttpException, PSException {
 		CompanyStatisticsModel result = new CompanyStatisticsModel();
+		
 		String response = HttpRequestUtil.getMethod(getURLOfCompanyStatistics(symbol), null, MAX_RETRY_TIMES);
 		
 		Pattern insiderOwnPat = Pattern.compile(INSIDER_OWN_REG);
@@ -76,5 +66,10 @@ public class FINVIZSpider {
 			throw new PSException("No statistics info: " + symbol);
 		}
 		return result;
+	}
+
+	
+	private static String getURLOfCompanyStatistics(String symbol) {
+		return String.format(CommonConstants.URL_GET_COMPANY_STATISTICS_YAHOO, symbol, symbol);
 	}
 }

@@ -25,6 +25,7 @@ import org.maple.profitsystem.services.CompanyService;
 import org.maple.profitsystem.services.CompanyStatisticsService;
 import org.maple.profitsystem.spiders.FINVIZSpider;
 import org.maple.profitsystem.spiders.NASDAQSpider;
+import org.maple.profitsystem.spiders.YAHOOSpider;
 import org.maple.profitsystem.utils.TradingDateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -170,10 +171,13 @@ public class CompanyInfoCollector {
 			// get company statistics info
 			result = FINVIZSpider.fetchCompanyStatistics(symbol);
 		} catch (Exception e) {
-			// TODO Use alternative web site
-			
-			// can not get info to do this
-			logger.error(e.getMessage());
+			// ues YAHOO to fetch
+			try {
+				result = YAHOOSpider.fetchCompanyStatistics(symbol);
+			} catch (Exception e1) {
+				// can not get info to do this
+				logger.error(e.getMessage());
+			}
 		}
 		return result;
 	}

@@ -45,4 +45,7 @@ public class CommonConstants {
 	// ----------------------- FINVIZ CONSTANTS ---------------------------------
 	public final static String URL_GET_COMPANY_STATISTICS_FINVIZ = "https://www.finviz.com/quote.ashx?t=";
 	
+	// ------------------------ YAHOO CONSTANTS ---------------------------
+	public final static String URL_GET_COMPANY_STATISTICS_YAHOO = "https://finance.yahoo.com/quote/%s/key-statistics?p=%s";
+	
 }

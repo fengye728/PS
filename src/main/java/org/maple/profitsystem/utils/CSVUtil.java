@@ -64,4 +64,45 @@ public class CSVUtil {
 			}
 		}
 	}
+	
+	/**
+	 * Convert string percent like 1.8%, -98,4% to Double percent like 1.8, -98.4.
+	 *  
+	 * @param perc
+	 * @return
+	 */
+	public static Double convertStringPerc2DoublePerc(String perc) {
+		try {
+			return Double.valueOf(perc.substring(0, perc.length() - 1));
+		} catch(Exception e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Convert display number(for example: 1.8B, 85M) to Integer number.
+	 * 
+	 * @param dispNum
+	 * @return
+	 */
+	public static Integer converDisplayNum2Integer(String dispNum) {
+		try{
+			double number = Double.valueOf(dispNum.substring(0, dispNum.length() - 1));
+			int multiplier = 0;
+			switch(Character.toUpperCase(dispNum.charAt(dispNum.length() - 1))) {
+			case 'K':
+				multiplier = 1000;
+				break;
+			case 'M':
+				multiplier = 1000000;
+				break;
+			case 'B':
+				multiplier = 1000000000;
+				break;
+			}
+			return (int) (number * multiplier);
+		} catch(Exception e) {
+			return null;
+		}
+	}
 }

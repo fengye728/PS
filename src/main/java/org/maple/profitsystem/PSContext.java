@@ -66,7 +66,7 @@ public class PSContext {
 		
 		// then set schedule
 		
-		companyService.persistCompanyWithFullInfoListToDisk(companyList);
+		storeListCompanyFullInfoToDisk();
 	}
 	
 	/**
