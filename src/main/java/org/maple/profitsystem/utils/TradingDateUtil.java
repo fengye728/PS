@@ -9,15 +9,23 @@ import org.maple.profitsystem.constants.CommonConstants;
 public class TradingDateUtil {
 
 	@SuppressWarnings("deprecation")
-	public static int betweenTradingDays(Date start, Date end) {
-		if(start == null || end == null)
+	public static int betweenTradingDays(Date startDt, Date endDt) {
+		if(startDt == null || endDt == null)
 			return 0;
-		
-		if(start.after(end)) {
-			return -betweenTradingDays(end, start);
+		if(startDt.after(endDt)) {
+			return -(betweenTradingDays(endDt, startDt));
 		}
 		
+		Calendar tmpStart = Calendar.getInstance();
+		tmpStart.setTime(startDt);
+		
+		Calendar tmpEnd = Calendar.getInstance();
+		tmpEnd.setTime(endDt);
+		
+		Date start = tmpStart.getTime();
+		Date end = tmpEnd.getTime();
 		// eliminate the hour, minute and second's effect
+		
 		start.setHours(0);
 		start.setMinutes(0);
 		start.setSeconds(0);
@@ -54,17 +62,26 @@ public class TradingDateUtil {
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
+	public static boolean isTradingDay(Date day) {
+		int weekday = day.getDay();
+		if(weekday == 0 || weekday == 6) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
 	/**
 	 * 
 	 * @param date yyyyMMdd
 	 * @return
 	 */
 	public static Date convertNumDate2Date(Integer date) {
-		DateFormat df = new SimpleDateFormat (CommonConstants.DATE_FORMAT_OUT);
 		try {
+			DateFormat df = new SimpleDateFormat (CommonConstants.DATE_FORMAT_OUT);
 			return df.parse(String.valueOf(date));
 		} catch (Exception e) {
-			e.printStackTrace();
 			return null;
 		}
 	}

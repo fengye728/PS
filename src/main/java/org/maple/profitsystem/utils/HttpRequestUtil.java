@@ -21,6 +21,8 @@ import org.maple.profitsystem.exceptions.HttpException;
 public class HttpRequestUtil {
 	//private static Logger logger = Logger.getLogger(HttpRequestUtil.class);
 	
+	private final static int REQUEST_TIMEOUT = 60000; 
+	
 	private static String commonMethod(String url, Map<String, String> propertyMap, String data, String method) throws IOException {
 		String result = "";
 		
@@ -29,6 +31,7 @@ public class HttpRequestUtil {
 		try {
 			URL realUrl = new URL(url);
 			HttpURLConnection conn = (HttpURLConnection)realUrl.openConnection();
+			conn.setConnectTimeout(REQUEST_TIMEOUT);
 			
 			conn.setRequestMethod(method);
 			if(propertyMap != null) {

@@ -6,7 +6,7 @@ public class EVBBSystemResult {
 	
 	private CompanyModel company;
 	
-	private int satisfiedDayIndex;
+	private int dayIndex;
 	// ---------- Fundamental favors --------------------
 	private boolean insiderOwership;
 	
@@ -32,6 +32,61 @@ public class EVBBSystemResult {
 	private boolean spikeVolume;
 	
 	private boolean emaSmaCorelative;
+	
+	public boolean isSatisfied() {
+		return satisfiedCount() >= EVBBSystem.THRESOLD;
+	}
+	
+	public int satisfiedCount() {
+		int count = 0;
+		if(insiderOwership) {
+			++count;
+		}
+		if(lowFloat) {
+			++count;
+		}
+		
+		if(noNews) {
+			++count;
+		}
+		
+		if(lowResistance) {
+			++count;
+		}
+		
+		if(highBreakoutPrice) {
+			++count;
+		}
+		
+		if(lowSMAVolume) {
+			++count;
+		}
+		
+		if(intradayUp) {
+			++count;
+		}
+		
+		if(beforeUp) {
+			++count;
+		}
+		
+		if(aboveLowPriceLimit) {
+			++count;
+		}
+		
+		if(belowHighPriceLimit) {
+			++count;
+		}
+		
+		if(spikeVolume) {
+			++count;
+		}
+		
+		if(emaSmaCorelative) {
+			++count;
+		}
+		return count;
+	}
 
 	public CompanyModel getCompany() {
 		return company;
@@ -39,14 +94,6 @@ public class EVBBSystemResult {
 
 	public void setCompany(CompanyModel company) {
 		this.company = company;
-	}
-
-	public int getSatisfiedDayIndex() {
-		return satisfiedDayIndex;
-	}
-
-	public void setSatisfiedDayIndex(int satisfiedDayIndex) {
-		this.satisfiedDayIndex = satisfiedDayIndex;
 	}
 
 	public boolean isInsiderOwership() {
@@ -143,5 +190,13 @@ public class EVBBSystemResult {
 
 	public void setEmaSmaCorelative(boolean emaSmaCorelative) {
 		this.emaSmaCorelative = emaSmaCorelative;
+	}
+
+	public int getDayIndex() {
+		return dayIndex;
+	}
+
+	public void setDayIndex(int dayIndex) {
+		this.dayIndex = dayIndex;
 	}
 }

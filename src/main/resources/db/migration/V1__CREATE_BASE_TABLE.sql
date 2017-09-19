@@ -17,7 +17,7 @@ CREATE TABLE company
 CREATE TABLE company_statistics
 (
 	id bigserial,
-	company_id bigint UNIQUE NOT NULL,
+	company_id bigint NOT NULL,
 	insider_own_perc double precision,
 	inst_own_perc double precision,
 	shs_outstand integer,
@@ -26,6 +26,7 @@ CREATE TABLE company_statistics
 	last_update_dt date NOT NULL,
 	
 	CONSTRAINT company_statistics_pkey PRIMARY KEY (id),
+	CONSTRAINT company_statistics_unique UNIQUE(company_id),
 	CONSTRAINT company_statistics_fk FOREIGN KEY(company_id) REFERENCES company(id)
 	
 );
@@ -33,7 +34,7 @@ CREATE TABLE company_statistics
 CREATE TABLE stock_quote
 (
 	id bigserial,
-	company_id bigint UNIQUE NOT NULL,
+	company_id bigint NOT NULL,
 	quote_date integer NOT NULL,
 	open double precision NOT NULL,
 	close double precision NOT NULL,

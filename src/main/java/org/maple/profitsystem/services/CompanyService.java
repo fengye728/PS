@@ -20,6 +20,8 @@ public interface CompanyService {
 	
 	List<CompanyModel> getAllCompaniesWithStatistics();
 	
+	List<CompanyModel> getAllCompaniesFull();
+	
 	int addCompanyFullInfo(CompanyModel record);
 	
 	int addListCompaniesFullInfo(List<CompanyModel> records);

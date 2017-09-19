@@ -12,7 +12,7 @@ import org.maple.profitsystem.utils.HttpRequestUtil;
 
 public class FINVIZSpider {
 	
-	private final static int MAX_RETRY_TIMES = 5;
+	private final static int MAX_RETRY_TIMES = 2;
 	
 	private final static String INSIDER_OWN_REG = "Insider Own</td>.*?<b>(.*?)</b>";
 	

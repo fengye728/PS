@@ -55,12 +55,12 @@ public class StockQuoteModel implements Comparable<StockQuoteModel>{
 			StockQuoteModel result = new StockQuoteModel();
 			// TODO compibility for old
 			//result.symbol = fields[0];
-			result.quoteDate = Integer.valueOf(fields[1]);
-			result.open = Double.valueOf(fields[2]);
-			result.close = Double.valueOf(fields[3]);
-			result.high = Double.valueOf(fields[4]);
-			result.low = Double.valueOf(fields[5]);
-			result.volume = Integer.valueOf(fields[6]);
+			result.quoteDate = Integer.valueOf(fields[0]);
+			result.open = Double.valueOf(fields[1]);
+			result.close = Double.valueOf(fields[2]);
+			result.high = Double.valueOf(fields[3]);
+			result.low = Double.valueOf(fields[4]);
+			result.volume = Integer.valueOf(fields[5]);
 			
 			return result;
 		} catch(Exception e) {

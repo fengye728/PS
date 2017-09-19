@@ -12,7 +12,7 @@ import org.maple.profitsystem.utils.HttpRequestUtil;
 
 public class YAHOOSpider {
 	
-	private final static int MAX_RETRY_TIMES = 5;
+	private final static int MAX_RETRY_TIMES = 2;
 	
 	// -------------- Regular Expression of fields in Statistics ------------------------------
 	private final static String SHS_OUTSTAND_REG = ">Shares Outstanding</span>.*?<td.*?>(.*?)</td>";

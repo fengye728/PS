@@ -13,14 +13,20 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+import org.maple.profitsystem.Application;
 import org.maple.profitsystem.ConfigProperties;
 import org.maple.profitsystem.PSContext;
+import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.models.CompanyStatisticsModel;
+import org.maple.profitsystem.models.StockQuoteModel;
 import org.maple.profitsystem.services.CompanyService;
 import org.maple.profitsystem.services.CompanyStatisticsService;
 import org.maple.profitsystem.spiders.FINVIZSpider;
@@ -31,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * Collect all information of company and add these into database.
+ * Collect all information of company and add these into database by period specified properties.
  * 
  * @author SEELE
  *
@@ -40,6 +46,8 @@ import org.springframework.stereotype.Component;
 public class CompanyInfoCollector {
 	
 	private static Logger logger = Logger.getLogger(CompanyInfoCollector.class);
+	
+	private final static int THREAD_POOL_WAIT_MINUTES = 1;
 	
 	/**
 	 * The context of the application. 
@@ -55,7 +63,6 @@ public class CompanyInfoCollector {
 	
 	@Autowired
 	private CompanyStatisticsService companyStatisticsService;
-	
 	
 	/**
 	 * Add the new companies from network.
@@ -77,8 +84,6 @@ public class CompanyInfoCollector {
 			Set<CompanyModel> set = new HashSet<>(newestList);
 			newestList = new ArrayList<>(set);
 		} catch (HttpException e) {
-			// TODO new web site
-			
 			logger.error("Updated base information of companies failed: " + e.getMessage());
 		}
 		
@@ -100,65 +105,117 @@ public class CompanyInfoCollector {
 	 */
 	public void updateListCompanyStatistics() {
 		logger.info("Updating statistics of companies...");
-		CompanyStatisticsModel tmp = null;
-		int invalidCount = 0;
 		
 		Calendar nowDt = Calendar.getInstance();
-		nowDt.add(Calendar.DAY_OF_MONTH, Integer.valueOf(properties.getStatisticsUpdatePeriod()));
+		nowDt.add(Calendar.DAY_OF_MONTH, -Integer.valueOf(properties.getStatisticsUpdatePeriod()));
+		
+		ExecutorService executor = getNewThreadPool();
 		
 		for(CompanyModel company : context.getCompanyList()) {
 			// check if the statistics need to update
-			if(!company.getStatistics().isEmpty() && company.getStatistics().getLastUpdateDt().before(nowDt.getTime())) {
-				continue;
-			}
-			tmp = fetchCompanyStatisticsBySymbol(company.getSymbol());
-			if(company.getStatistics().set(tmp) != 0) {
+			if(company.getStatistics().isEmpty() || company.getStatistics().getLastUpdateDt().before(nowDt.getTime())) {
 				// update statistics
-				invalidCount += 1 - companyStatisticsService.updateCompanyStatistics(company.getStatistics());
+				executor.execute(new CompanyStatisticsUpdateTask(company));
 			}
 		}
-		logger.info("Updated statistics of companies completed! Count of falied records: " + invalidCount);
+		awaitThreadPool(executor);
+		logger.info("Updated statistics of companies completed!");
 	}
 	
 	public void updateListCompanyQuotes() {
 		logger.info("Updating stock quotes of companies...");
-		int invalidCount = 0;
 		
-		Calendar nowDt = Calendar.getInstance();
-		nowDt.add(Calendar.DAY_OF_MONTH, Integer.valueOf(properties.getQuotesUpdatePeriod()));
+		ExecutorService executor = getNewThreadPool();
 		
 		for(CompanyModel company : context.getCompanyList()) {
-			Date lastDate = TradingDateUtil.convertNumDate2Date(company.getLastQuoteDt());
-			if(lastDate != null && lastDate.before(nowDt.getTime())) {
-				continue;
+			if(!isNewestQuotes(company)) {
+				executor.execute(new CompanyQuotesUpdateTask(company)); 
 			}
-			 
-			invalidCount += 1 - updateCompanyQuotesByCompany(company);
 		}
-		logger.info("Updated stock quotes of companies completed! Count of failed records: " + invalidCount);
+		awaitThreadPool(executor);
+		logger.info("Updated stock quotes of companies completed!");
 	}
 	
-	/**
-	 * Update the newest quotes of the specified company.
-	 * 
-	 * @param company
-	 * @return
-	 */
-	private int updateCompanyQuotesByCompany(CompanyModel company) {
-		try {
-			// get and set newest quotes
-			company.setQuoteList(NASDAQSpider.fetchNewestStockQuotesByCompany(company));
-			companyService.updateCompanyWithQuotes(company);
-			return 1;
-		} catch (PSException e) {
-			logger.error(e.getMessage());
-			return 0;
-		} catch (HttpException e) {
-			// TODO Using new web site
+	private boolean isNewestQuotes(CompanyModel company) {
+		
+		if(company.getLastQuoteDt() == 0) {
+			return false;
+		} else {
+			Date lastDate = TradingDateUtil.convertNumDate2Date(company.getLastQuoteDt());
+			Date nowDt = new Date();
+			int gapDays = TradingDateUtil.betweenTradingDays(lastDate, nowDt);
+			if(gapDays > Integer.valueOf(properties.getQuotesUpdatePeriod())) {
+				return false;
+			} else if(gapDays <= 0) {
+				return true;
+			} else {
+				//Set the close time
+				Calendar nowCloseDt = Calendar.getInstance();
+				nowCloseDt.set(Calendar.HOUR_OF_DAY, 16);
+				nowCloseDt.set(Calendar.MINUTE, 0);
+				nowCloseDt.set(Calendar.SECOND, 0);
+				nowCloseDt.set(Calendar.MILLISECOND, 0);
+				
+				if(nowDt.after(nowCloseDt.getTime())) {
+					return false;
+				} else {
+					return true;
+				}
+			}
 			
-			logger.error(e.getMessage());
-			return 0;
 		}
+	}
+	
+	private ExecutorService getNewThreadPool() {
+		return Executors.newFixedThreadPool(CommonConstants.MAX_THREADS);
+	}
+	
+	private void awaitThreadPool(ExecutorService executor) {
+		try {
+			executor.shutdown();
+			while(!executor.awaitTermination(THREAD_POOL_WAIT_MINUTES, TimeUnit.MINUTES));
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+}
+
+/**
+ * Fetch company statistics and update it to database.
+ * 
+ * @author SEELE
+ *
+ */
+class CompanyStatisticsUpdateTask implements Runnable {
+
+	@Autowired
+	private static CompanyStatisticsService companyStatisticsService;
+	
+	private static Logger logger = Logger.getLogger(CompanyStatisticsUpdateTask.class);
+	
+	private CompanyModel company;
+	
+	static {
+		companyStatisticsService = Application.springContext.getBean(CompanyStatisticsService.class);
+	}
+	
+	public CompanyStatisticsUpdateTask(CompanyModel company) {
+		this.company = company;
+	}
+	
+	@Override
+	public void run() {
+		if(company != null)
+			updateCompanyStatistics();
+	}
+	
+	private void updateCompanyStatistics() {
+		
+		CompanyStatisticsModel tmp = fetchCompanyStatisticsBySymbol(company.getSymbol());
+		if(company.getStatistics().set(tmp) != 0) {
+			// update statistics
+			companyStatisticsService.updateCompanyStatistics(company.getStatistics());
+		}		
 	}
 	
 	/**
@@ -171,14 +228,78 @@ public class CompanyInfoCollector {
 			// get company statistics info
 			result = FINVIZSpider.fetchCompanyStatistics(symbol);
 		} catch (Exception e) {
-			// ues YAHOO to fetch
+			// use YAHOO to fetch
 			try {
 				result = YAHOOSpider.fetchCompanyStatistics(symbol);
 			} catch (Exception e1) {
 				// can not get info to do this
-				logger.error(e.getMessage());
+				logger.error(e.getMessage() + " | " + e1.getMessage());
 			}
 		}
 		return result;
 	}
+	
+}
+
+/**
+ * Fetch company statistics and update it to database.
+ * 
+ * @author SEELE
+ *
+ */
+class CompanyQuotesUpdateTask implements Runnable {
+
+	private static CompanyService companyService;
+	
+	private static Logger logger = Logger.getLogger(CompanyQuotesUpdateTask.class);
+	
+	private CompanyModel company;
+	
+	static {
+		companyService = Application.springContext.getBean(CompanyService.class);
+	}
+	
+	public CompanyQuotesUpdateTask(CompanyModel company) {
+		this.company = company;
+	}
+	
+	@Override
+	public void run() {
+		if(company != null)
+			updateCompanyQuotes();
+	}
+	
+	/**
+	 * Update the newest quotes of the specified company.
+	 * 
+	 * @param company
+	 * @return
+	 */
+	private void updateCompanyQuotes() {
+		try{
+		company.setQuoteList(fetchNewestStockQuotes());
+		// get and set newest quotes
+		companyService.updateCompanyWithQuotes(company);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+	
+	/**
+	 * Fetch the statistics info of the specified company.
+	 * @param company
+	 */
+	private List<StockQuoteModel> fetchNewestStockQuotes() {
+		List<StockQuoteModel> result = null;
+		try {
+			// get company quotes
+			result = NASDAQSpider.fetchNewestStockQuotesByCompany(company);
+		} catch (Exception e) {
+			// TODO use YAHOO to fetch
+			logger.error(e.getMessage());
+		}
+		return result;
+	}
+	
 }

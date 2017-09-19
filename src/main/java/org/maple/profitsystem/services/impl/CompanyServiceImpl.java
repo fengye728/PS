@@ -207,7 +207,11 @@ public class CompanyServiceImpl implements CompanyService {
 
 	@Override
 	public List<CompanyModel> getAllCompaniesWithStatistics() {
-		// TODO Auto-generated method stub
-		return null;
+		return companyModelMapper.selectAllWithStatistics();
+	}
+
+	@Override
+	public List<CompanyModel> getAllCompaniesFull() {
+		return companyModelMapper.selectAllFull();
 	}
 }
