@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.maple.profitsystem.mappers.StockQuoteModelMapper">
+  <resultMap id="BaseResultMap" type="org.maple.profitsystem.models.StockQuoteModel">
+    <result column="id" jdbcType="BIGINT" property="id" />
+    <result column="company_id" jdbcType="BIGINT" property="companyId" />
+    <result column="quote_date" jdbcType="INTEGER" property="quoteDate" />
+    <result column="open" jdbcType="DOUBLE" property="open" />
+    <result column="close" jdbcType="DOUBLE" property="close" />
+    <result column="high" jdbcType="DOUBLE" property="high" />
+    <result column="low" jdbcType="DOUBLE" property="low" />
+    <result column="volume" jdbcType="INTEGER" property="volume" />
+  </resultMap>
+  
+  <select id="selectListByCompanyId" resultMap="BaseResultMap">
+  	SELECT *
+  	FROM stock_quote
+  	WHERE company_id = #{companyId,jdbcType=BIGINT}
+  </select>
+
+</mapper>

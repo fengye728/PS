@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.maple.profitsystem.mappers.CompanyStatisticsModelMapper">
+  <resultMap id="BaseResultMap" type="org.maple.profitsystem.models.CompanyStatisticsModel">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="company_id" jdbcType="BIGINT" property="companyId" />
+    <result column="insider_own_perc" jdbcType="DOUBLE" property="insiderOwnPerc" />
+    <result column="inst_own_perc" jdbcType="DOUBLE" property="instOwnPerc" />
+    <result column="shs_outstand" jdbcType="INTEGER" property="shsOutstand" />
+    <result column="shs_float" jdbcType="INTEGER" property="shsFloat" />
+    <result column="create_dt" jdbcType="DATE" property="createDt" />
+    <result column="last_update_dt" jdbcType="DATE" property="lastUpdateDt" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, company_id, insider_own_perc, inst_own_perc, shs_outstand, shs_float, create_dt, 
+    last_update_dt
+  </sql>
+  
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from company_statistics
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  
+  <!-- Below is customized -->
+  <select id="selectByCompanyId" resultMap="BaseResultMap">
+  	SELECT 
+  		<include refid="Base_Column_List" />
+  	FROM company_statistics
+  	WHERE company_id = #{companyId,jdbcType=BIGINT}
+  </select>
+ 
+</mapper>

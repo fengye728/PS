@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.maple.profitsystem.mappers.CompanyModelMapper">
+  <resultMap id="BaseResultMap" type="org.maple.profitsystem.models.CompanyModel">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="symbol" jdbcType="VARCHAR" property="symbol" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="ipo_year" jdbcType="INTEGER" property="ipoYear" />
+    <result column="sector" jdbcType="VARCHAR" property="sector" />
+    <result column="industry" jdbcType="VARCHAR" property="industry" />
+    <result column="last_quote_dt" jdbcType="INTEGER" property="lastQuoteDt" />
+    <result column="create_dt" jdbcType="DATE" property="createDt" />
+    <result column="last_update_dt" jdbcType="DATE" property="lastUpdateDt" />
+  </resultMap>
+  
+  <sql id="Base_Column_List">
+    id, symbol, name, ipo_year, sector, industry, last_quote_dt, create_dt, 
+    last_update_dt
+  </sql>
+  
+  <!-- Below is customized -->
+  <resultMap id="CompanyWithStatisticsMap" type="org.maple.profitsystem.models.CompanyModel">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="symbol" jdbcType="VARCHAR" property="symbol" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="ipo_year" jdbcType="INTEGER" property="ipoYear" />
+    <result column="sector" jdbcType="VARCHAR" property="sector" />
+    <result column="industry" jdbcType="VARCHAR" property="industry" />
+    <result column="last_quote_dt" jdbcType="INTEGER" property="lastQuoteDt" />
+    <result column="create_dt" jdbcType="DATE" property="createDt" />
+    <result column="last_update_dt" jdbcType="DATE" property="lastUpdateDt" />
+    <association property="statistics" column="id" select="selectStatisticsByCompanyId"></association>
+  </resultMap>
+  
+  <resultMap id="CompanyFullMap" type="org.maple.profitsystem.models.CompanyModel">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="symbol" jdbcType="VARCHAR" property="symbol" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="ipo_year" jdbcType="INTEGER" property="ipoYear" />
+    <result column="sector" jdbcType="VARCHAR" property="sector" />
+    <result column="industry" jdbcType="VARCHAR" property="industry" />
+    <result column="last_quote_dt" jdbcType="INTEGER" property="lastQuoteDt" />
+    <result column="create_dt" jdbcType="DATE" property="createDt" />
+    <result column="last_update_dt" jdbcType="DATE" property="lastUpdateDt" />
+    <association property="statistics" column="id" select="selectStatisticsByCompanyId"></association>
+    <collection property="quoteList" column="id" select="selectQuoteListByCompanyId"></collection>
+  </resultMap>
+  
+  <resultMap id="StatisticsMap" type="org.maple.profitsystem.models.CompanyStatisticsModel">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="company_id" jdbcType="BIGINT" property="companyId" />
+    <result column="insider_own_perc" jdbcType="DOUBLE" property="insiderOwnPerc" />
+    <result column="inst_own_perc" jdbcType="DOUBLE" property="instOwnPerc" />
+    <result column="shs_outstand" jdbcType="INTEGER" property="shsOutstand" />
+    <result column="shs_float" jdbcType="INTEGER" property="shsFloat" />
+    <result column="create_dt" jdbcType="DATE" property="createDt" />
+    <result column="last_update_dt" jdbcType="DATE" property="lastUpdateDt" />
+  </resultMap>
+  
+  <resultMap id="StockQuoteMap" type="org.maple.profitsystem.models.StockQuoteModel">
+    <result column="id" jdbcType="BIGINT" property="id" />
+    <result column="company_id" jdbcType="BIGINT" property="companyId" />
+    <result column="quote_date" jdbcType="INTEGER" property="quoteDate" />
+    <result column="open" jdbcType="DOUBLE" property="open" />
+    <result column="close" jdbcType="DOUBLE" property="close" />
+    <result column="high" jdbcType="DOUBLE" property="high" />
+    <result column="low" jdbcType="DOUBLE" property="low" />
+    <result column="volume" jdbcType="INTEGER" property="volume" />
+  </resultMap>
+  
+  <select id="selectStatisticsByCompanyId" parameterType="java.lang.Long" resultMap="StatisticsMap">
+  	SELECT id, company_id, insider_own_perc, inst_own_perc, shs_outstand, shs_float, create_dt, last_update_dt
+  	FROM company_statistics
+  	WHERE company_id = #{0}
+  </select>
+  
+  <select id="selectAll" resultMap="BaseResultMap">
+  	SELECT 
+  		<include refid="Base_Column_List" />
+  	FROM company
+  </select>
+  
+  <select id="selectAllWithStatistics" resultMap="CompanyWithStatisticsMap">
+   SELECT 
+  		<include refid="Base_Column_List" />
+  	FROM company
+  </select>
+  
+  <select id="selectAllFull" resultMap="CompanyFullMap">
+  	SELECT 
+  		<include refid="Base_Column_List" />
+  	FROM company
+  </select>
+  
+  <select id="selectQuoteListByCompanyId" resultMap="StockQuoteMap">
+  	SELECT *
+  	FROM stock_quote
+  	WHERE company_id = #{0}
+  </select>
+
+</mapper>
