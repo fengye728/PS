@@ -120,7 +120,7 @@ public class CompanyServiceImpl implements CompanyService {
 	public int persistCompanyWithFullInfoListToDisk(List<CompanyModel> records) {
 		int count = 0;
 		for(CompanyModel record : records) {
-			count += persistCompanyWithFullInfoToDisk(record);
+			count += persistCompanyWithFullInfoToDisk(this.getCompanyFullById(record.getId()));
 		}
 		return count;
 	}
@@ -213,5 +213,10 @@ public class CompanyServiceImpl implements CompanyService {
 	@Override
 	public List<CompanyModel> getAllCompaniesFull() {
 		return companyModelMapper.selectAllFull();
+	}
+
+	@Override
+	public CompanyModel getCompanyFullById(long id) {
+		return companyModelMapper.selectFullById(id);
 	}
 }

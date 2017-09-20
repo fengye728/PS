@@ -121,7 +121,6 @@ public class PSContext {
 	 */
 	private int storeListCompanyFullInfoToDisk() {
 		logger.info("Persist data into disk...");
-		companyList = companyService.getAllCompaniesFull();
 		int count = companyService.persistCompanyWithFullInfoListToDisk(companyList);
 		logger.info("Persisted data into disk completely! Count of records: " + count);
 		return count;

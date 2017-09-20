@@ -9,12 +9,7 @@ package org.maple.profitsystem.constants;
 
 public class CommonConstants {
 	
-	public final static int MAX_THREADS = 15;
-	
 	public final static String NULL_STRING = "null";
-	
-	public final static int BUFFER_SIZE_OF_READER = 524288;	// 512 * 1024
-	
 	
 	// -------------- Date Format -----------------------------------
 	public final static String DATE_FORMAT_OUT = "yyyyMMdd";

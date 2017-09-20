@@ -9,12 +9,18 @@ package org.maple.profitsystem.constants;
 
 public class CommonConstants {
 	
-	public final static int MAX_THREADS = 12;
-	
 	public final static String NULL_STRING = "null";
 	
 	public final static int BUFFER_SIZE_OF_READER = 524288;	// 512 * 1024
 	
+	// --------------- Properties Default Value ---------------------
+	public final static int DEFAULT_MAX_THREADS = 10;
+	
+	public final static int DEFAULT_STATISTICS_UPDATE_PERIOD = 7;
+	
+	public final static int DEFAULT_QUOTES_UPDATE_PERIOD = 1;
+	
+	public final static String DEFAULT_BACKUP_PATH = "StockQuotes";
 	
 	// -------------- Date Format -----------------------------------
 	public final static String DATE_FORMAT_OUT = "yyyyMMdd";
@@ -33,9 +39,9 @@ public class CommonConstants {
 	
 	public final static int NASDAQ_COMPANY_LIST_RECORD_FIELDS_NUMBER = 9;
 	
-	public final static String URL_GET_COMPANY_LIST_NASDAQ = "http://www.nasdaq.com/screening/companies-by-industry.aspx?render=download";
+	public final static String URL_GET_COMPANY_LIST_NASDAQ = "https://www.nasdaq.com/screening/companies-by-industry.aspx?render=download";
 	
-	public final static String URL_GET_STOCK_QUOTES_NASDAQ_PREFIX = "http://www.nasdaq.com/symbol/";
+	public final static String URL_GET_STOCK_QUOTES_NASDAQ_PREFIX = "https://www.nasdaq.com/symbol/";
 	
 	public final static String URL_GET_STOCK_QUOTES_NASDAQ_SUFFIX = "/historical";
 	

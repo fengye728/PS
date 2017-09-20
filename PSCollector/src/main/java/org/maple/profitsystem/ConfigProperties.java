@@ -1,38 +1,53 @@
 package org.maple.profitsystem;
 
+import org.maple.profitsystem.constants.CommonConstants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "ps")
+@ConfigurationProperties(prefix = "ps", ignoreInvalidFields = true)
 public class ConfigProperties {
 	
-	private String backupPath;		// The path of backup file
+	private String backupPath = CommonConstants.DEFAULT_BACKUP_PATH;		// The path of backup file
 	
-	private String statisticsUpdatePeriod;
+	private Integer statisticsUpdatePeriod = CommonConstants.DEFAULT_STATISTICS_UPDATE_PERIOD;
 	
-	private String quotesUpdatePeriod;
+	private Integer quotesUpdatePeriod = CommonConstants.DEFAULT_QUOTES_UPDATE_PERIOD;
+	
+	private Integer maxThreads = CommonConstants.DEFAULT_MAX_THREADS;
 
 	public String getBackupPath() {
 		return backupPath;
 	}
 
-	public void setBackupPath(String backupPath) {
-		this.backupPath = backupPath;
-	}
-
-	public String getStatisticsUpdatePeriod() {
+	public Integer getStatisticsUpdatePeriod() {
 		return statisticsUpdatePeriod;
 	}
 
-	public void setStatisticsUpdatePeriod(String statisticsUpdatePeriod) {
-		this.statisticsUpdatePeriod = statisticsUpdatePeriod;
+	public void setStatisticsUpdatePeriod(Integer statisticsUpdatePeriod) {
+		if(statisticsUpdatePeriod != null)
+			this.statisticsUpdatePeriod = statisticsUpdatePeriod;
 	}
 
-	public String getQuotesUpdatePeriod() {
+	public Integer getQuotesUpdatePeriod() {
 		return quotesUpdatePeriod;
 	}
 
-	public void setQuotesUpdatePeriod(String quotesUpdatePeriod) {
-		this.quotesUpdatePeriod = quotesUpdatePeriod;
+	public void setQuotesUpdatePeriod(Integer quotesUpdatePeriod) {
+		if(quotesUpdatePeriod != null)
+			this.quotesUpdatePeriod = quotesUpdatePeriod;
+	}
+
+	public void setBackupPath(String backupPath) {
+		if(backupPath != null)
+			this.backupPath = backupPath;
+	}
+
+	public Integer getMaxThreads() {
+		return maxThreads;
+	}
+
+	public void setMaxThreads(Integer maxThreads) {
+		if(maxThreads != null)		
+			this.maxThreads = maxThreads;
 	}
 	
 	

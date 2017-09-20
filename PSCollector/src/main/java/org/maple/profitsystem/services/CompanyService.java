@@ -22,6 +22,8 @@ public interface CompanyService {
 	
 	List<CompanyModel> getAllCompaniesFull();
 	
+	CompanyModel getCompanyFullById(long id);
+	
 	int addCompanyFullInfo(CompanyModel record);
 	
 	int addListCompaniesFullInfo(List<CompanyModel> records);

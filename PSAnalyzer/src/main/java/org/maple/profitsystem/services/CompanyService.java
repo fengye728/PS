@@ -12,4 +12,6 @@ public interface CompanyService {
 	List<CompanyModel> getAllCompaniesWithStatistics();
 	
 	List<CompanyModel> getAllCompaniesFull();
+	
+	CompanyModel getCompanyFullById(long id);
 }

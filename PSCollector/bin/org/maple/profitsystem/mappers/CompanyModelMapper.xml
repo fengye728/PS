@@ -254,5 +254,13 @@
   	FROM stock_quote
   	WHERE company_id = #{0}
   </select>
+  
+  <select id="selectFullById" resultMap="CompanyFullMap">
+   	SELECT 
+  		<include refid="Base_Column_List" />
+  	FROM company
+  	WHERE id = #{id}
+  </select>
+  
 
 </mapper>

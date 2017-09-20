@@ -21,7 +21,6 @@ import org.apache.log4j.Logger;
 import org.maple.profitsystem.Application;
 import org.maple.profitsystem.ConfigProperties;
 import org.maple.profitsystem.PSContext;
-import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyModel;
@@ -107,7 +106,7 @@ public class CompanyInfoCollector {
 		logger.info("Updating statistics of companies...");
 		
 		Calendar nowDt = Calendar.getInstance();
-		nowDt.add(Calendar.DAY_OF_MONTH, -Integer.valueOf(properties.getStatisticsUpdatePeriod()));
+		nowDt.add(Calendar.DAY_OF_MONTH, -properties.getStatisticsUpdatePeriod());
 		
 		ExecutorService executor = getNewThreadPool();
 		
@@ -152,7 +151,7 @@ public class CompanyInfoCollector {
 			Date lastDate = TradingDateUtil.convertNumDate2Date(company.getLastQuoteDt());
 			Date nowDt = new Date();
 			int gapDays = TradingDateUtil.betweenTradingDays(lastDate, nowDt);
-			if(gapDays > Integer.valueOf(properties.getQuotesUpdatePeriod())) {
+			if(gapDays > properties.getQuotesUpdatePeriod()) {
 				return false;
 			} else if(gapDays <= 0) {
 				return true;
@@ -180,7 +179,7 @@ public class CompanyInfoCollector {
 	 * @return
 	 */
 	private ExecutorService getNewThreadPool() {
-		return Executors.newFixedThreadPool(CommonConstants.MAX_THREADS);
+		return Executors.newFixedThreadPool(properties.getMaxThreads());
 	}
 	
 	/**

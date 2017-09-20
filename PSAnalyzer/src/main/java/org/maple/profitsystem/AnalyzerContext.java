@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.services.CompanyService;
+import org.maple.profitsystem.services.StockQuoteService;
 import org.maple.profitsystem.systems.EVBBSystem;
 import org.maple.profitsystem.systems.EVBBSystemResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,10 @@ public class AnalyzerContext {
 	private CompanyService companyService;
 	
 	@Autowired
-	private EVBBSystem evbbSystem;
+	private StockQuoteService stockQuoteService;
 	
+	@Autowired
+	private EVBBSystem evbbSystem;
 	
 	
 	public void run() {
@@ -34,18 +37,22 @@ public class AnalyzerContext {
 		// use EVBB System ot analyze 
 		List<EVBBSystemResult> satisfiedResults = new ArrayList<>();
 		for(CompanyModel company : companies) {
+			company.setQuoteList(stockQuoteService.getAllStockQuotesByCompanyId(company.getId()));
 			List<EVBBSystemResult> tmpResults = evbbSystem.analyzeAll(company);
 			satisfiedResults.addAll(tmpResults);
+			// output
+			for(EVBBSystemResult result : tmpResults) {
+				
+				logger.info(String.format("%s|%s|%s", result.getCompany(), result.getCompany().getStatistics(), result.getCompany().getQuoteList().get(result.getDayIndex())));
+			}
 		}
 		
-		// output
-		for(EVBBSystemResult result : satisfiedResults) {
-			
-			logger.info(String.format("%s|%s|%s", result.getCompany(), result.getCompany().getStatistics(), result.getCompany().getQuoteList().get(result.getDayIndex())));
-		}
 	}
 	
+	/**
+	 * Get company base and statistics
+	 */
 	private void postLoadData() {
-		companies = companyService.getAllCompaniesFull();
+		companies = companyService.getAllCompaniesWithStatistics();
 	}
 }

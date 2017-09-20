@@ -30,4 +30,9 @@ public class CompanyServiceImpl implements CompanyService {
 	public List<CompanyModel> getAllCompaniesFull() {
 		return companyModelMapper.selectAllFull();
 	}
+	
+	@Override
+	public CompanyModel getCompanyFullById(long id) {
+		return companyModelMapper.selectFullById(id);
+	}
 }

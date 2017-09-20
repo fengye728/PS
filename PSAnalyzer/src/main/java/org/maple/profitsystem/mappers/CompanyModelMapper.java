@@ -15,4 +15,6 @@ public interface CompanyModelMapper {
     List<CompanyModel> selectAllWithStatistics();
     
     List<CompanyModel> selectAllFull();
+    
+    CompanyModel selectFullById(long id);
 }
