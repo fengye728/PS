@@ -29,6 +29,16 @@ public class NASDAQSpider {
 	
 	private final static int REQUEST_MAX_RETRY_TIMES = 2;
 	
+	private static Map<String, String> httpHeaders = null;
+	
+	static {
+		httpHeaders = new HashMap<>();
+		
+		httpHeaders.put("Host", "www.nasdaq.com");
+		httpHeaders.put("Origin", "http://www.nasdaq.com");
+		
+	}
+	
 	/**
 	 * Fetch a list of companies from nasdaq.
 	 * 
@@ -41,7 +51,7 @@ public class NASDAQSpider {
 		
 		List<CompanyModel> result = new ArrayList<>();
 		
-		String response = HttpRequestUtil.getMethod(CommonConstants.URL_GET_COMPANY_LIST_NASDAQ, null, REQUEST_MAX_RETRY_TIMES);
+		String response = HttpRequestUtil.getMethod(CommonConstants.URL_GET_COMPANY_LIST_NASDAQ, httpHeaders, REQUEST_MAX_RETRY_TIMES);
 		String[] lines = response.split(CommonConstants.NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD);
 		for(int i = 1; i < lines.length; ++i) {
 			try{
@@ -136,6 +146,7 @@ public class NASDAQSpider {
 		String postData = fieldDate + "|true|" + symbol.toUpperCase();
 		Map<String, String> propertyMap = new HashMap<>();
 		propertyMap.put("Content-Type", "application/json");
+		propertyMap.putAll(httpHeaders);
 		
 		return HttpRequestUtil.postMethod(baseUrl, propertyMap, postData, REQUEST_MAX_RETRY_TIMES);
 	}

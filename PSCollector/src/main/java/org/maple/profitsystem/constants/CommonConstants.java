@@ -14,7 +14,7 @@ public class CommonConstants {
 	public final static int BUFFER_SIZE_OF_READER = 524288;	// 512 * 1024
 	
 	// --------------- Properties Default Value ---------------------
-	public final static int DEFAULT_MAX_THREADS = 10;
+	public final static int DEFAULT_MAX_THREADS = 5;
 	
 	public final static int DEFAULT_STATISTICS_UPDATE_PERIOD = 7;
 	
