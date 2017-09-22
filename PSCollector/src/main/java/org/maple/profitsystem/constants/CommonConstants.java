@@ -11,6 +11,8 @@ public class CommonConstants {
 	
 	public final static String NULL_STRING = "null";
 	
+	public final static String FILE_SUFFIX_STOCK = ".stk";
+	
 	public final static int BUFFER_SIZE_OF_READER = 524288;	// 512 * 1024
 	
 	// --------------- Properties Default Value ---------------------

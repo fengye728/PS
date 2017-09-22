@@ -28,4 +28,5 @@ bin/
 ### Custom ###
 StockQuotes*/
 *.log
+!*.bat
 Programs/

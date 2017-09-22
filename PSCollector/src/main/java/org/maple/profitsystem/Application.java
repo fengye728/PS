@@ -27,13 +27,13 @@ public class Application{
 		springContext = SpringApplication.run(Application.class, args);
 		
 		// get ps context
-		PSContext context = springContext.getBean(PSContext.class);
+		CollectorContext context = springContext.getBean(CollectorContext.class);
 		
 		logger.info("Startup PS Collector");
 		
 		context.run();
 		
-		logger.info("Stop PS Collector");
+		logger.info("Startup schduled tasks...");
 	}
 
 }

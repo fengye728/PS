@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import org.maple.profitsystem.Application;
 import org.maple.profitsystem.ConfigProperties;
-import org.maple.profitsystem.PSContext;
+import org.maple.profitsystem.CollectorContext;
 import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyModel;
@@ -52,7 +52,7 @@ public class CompanyInfoCollector {
 	 * The context of the application. 
 	 */
 	@Autowired
-	PSContext context;
+	CollectorContext context;
 	
 	@Autowired
 	private ConfigProperties properties;	

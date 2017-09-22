@@ -14,9 +14,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PSContext {
+public class CollectorContext {
 	
-	private static Logger logger = Logger.getLogger(PSContext.class);
+	private static Logger logger = Logger.getLogger(CollectorContext.class);
 	
 	@Autowired
 	private ConfigProperties properties;
@@ -58,13 +58,13 @@ public class PSContext {
 			// no data in db
 			// then load data from disk
 			loadListCompanyFullInfoFromDisk();
+			// update and store all in first time
+			companyInfoCollector.addListNewCompaniesBaseInfo();
+			companyInfoCollector.updateListCompanyStatistics();
+			companyInfoCollector.updateListCompanyQuotes();
+			storeListCompanyFullInfoToDisk();
 		}
 		
-		// update and store all in first time
-		companyInfoCollector.addListNewCompaniesBaseInfo();
-		companyInfoCollector.updateListCompanyStatistics();
-		companyInfoCollector.updateListCompanyQuotes();
-		storeListCompanyFullInfoToDisk();
 	}
 	
 	@Scheduled(cron = "0 0 0 */7 * *")

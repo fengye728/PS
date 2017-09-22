@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.maple.profitsystem.ConfigProperties;
+import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.mappers.CompanyModelMapper;
 import org.maple.profitsystem.models.CompanyModel;
@@ -49,34 +50,29 @@ public class CompanyServiceImpl implements CompanyService {
 	@Override
 	public List<CompanyModel> loadCompanyWithFullInfoListFromDisk() {
 		
-		// For counting time
-		long lastTime = System.currentTimeMillis();
-		
 		logger.info("Loading full company info list from disk...");
+		
 		List<CompanyModel> result = new ArrayList<>();
 		File path = new File(properties.getBackupPath());
 		if(path.exists()) {
 			File[] diskFiles = path.listFiles();
 			
-			String[] contents = new String[diskFiles.length];
+			String content = null;
 			for(int i = 0; i < diskFiles.length; ++i) {
-				contents[i] = CSVUtil.readFileContent(diskFiles[i]);
-
-			}
-			
-			for(int i = 0; i < contents.length; ++i) {
 				try {
-					CompanyModel fullCompanyInfo = CompanyModel.parseFullFromFileCSV(contents[i]);
+					content = CSVUtil.readFileContent(diskFiles[i]);
+					
+					CompanyModel fullCompanyInfo = CompanyModel.parseFullFromFileCSV(content);
 					result.add(fullCompanyInfo);
+					
 				} catch (PSException e) {
 					logger.error("Load " + diskFiles[i].getName() + " failed!");
 				}
-				
 			}
 
 		}
 		
-		logger.info("Loaded full company info list from disk completed! Count of companies:" + result.size() + "|" + "Cost time: " + ((System.currentTimeMillis() - lastTime) / 1000));
+		logger.info("Loaded full company info list from disk completed! Count of companies:" + result.size());
 		return result;
 	}
 	
@@ -90,7 +86,7 @@ public class CompanyServiceImpl implements CompanyService {
 		FileWriter fw = null;
 		try {
 			
-			File file = new File(properties.getBackupPath() + File.separator + filename);
+			File file = new File(properties.getBackupPath() + File.separator + filename + CommonConstants.FILE_SUFFIX_STOCK);
 			if(!file.exists())
 				file.createNewFile();
 			fw = new FileWriter(file);

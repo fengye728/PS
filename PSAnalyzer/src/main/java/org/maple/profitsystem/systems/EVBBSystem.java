@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class EVBBSystem {
 	
-	public final static int THRESOLD = 10;
+	public final static int THRESOLD = 11;
 	
 	/**
 	 * Analyzes the company and finds all the moments which satisfied the EVBBSystem's condition
@@ -80,13 +80,14 @@ public class EVBBSystem {
 			return null;
 		}
 	}
+	
 	/**
 	 * Evaluates the system's success rate.
 	 * 
 	 * @param company
 	 * @return
 	 */
-	public EVBBSystemResult evaluate(CompanyModel company) {
+	public EVBBSystemResult evaluate(EVBBSystemResult evbbResult) {
 		return null;
 	}
 	
