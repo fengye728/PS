@@ -27,7 +27,7 @@ public class NASDAQSpider {
 	
 	private static Logger logger = Logger.getLogger(NASDAQSpider.class);
 	
-	private final static int REQUEST_MAX_RETRY_TIMES = 2;
+	private final static int REQUEST_MAX_RETRY_TIMES = 5;
 	
 	private static Map<String, String> httpHeaders = null;
 	

@@ -21,7 +21,6 @@ public class TradingDateUtil {
 		
 		Calendar tmpEnd = Calendar.getInstance();
 		tmpEnd.setTime(endDt);
-		
 		Date start = tmpStart.getTime();
 		Date end = tmpEnd.getTime();
 		// eliminate the hour, minute and second's effect
