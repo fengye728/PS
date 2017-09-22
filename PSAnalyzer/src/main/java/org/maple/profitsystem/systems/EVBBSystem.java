@@ -7,7 +7,7 @@
  */
 package org.maple.profitsystem.systems;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.maple.profitsystem.models.CompanyModel;
@@ -24,7 +24,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class EVBBSystem {
 	
-	public final static int THRESOLD = 11;
+	public final static int THRESOLD = 30;
+	
+	private final static int WAIT_DAYS_AFTER_SPIKE = 3;
 	
 	/**
 	 * Analyzes the company and finds all the moments which satisfied the EVBBSystem's condition
@@ -33,10 +35,10 @@ public class EVBBSystem {
 	 * @return
 	 */
 	public List<EVBBSystemResult> analyzeAll(CompanyModel company) {
-		ArrayList<EVBBSystemResult> result = new ArrayList<EVBBSystemResult>();
 		if(company == null || company.getQuoteList() == null) {
-			return result;
+			return null;
 		}
+		List<EVBBSystemResult> result = new LinkedList<EVBBSystemResult>();
 		List<StockQuoteModel> quotes = company.getQuoteList();
 		for(int i = quotes.size() - 1; i >= 0; --i) {
 			EVBBSystemResult tmp = analyzeByIndex(company, i);
@@ -50,7 +52,65 @@ public class EVBBSystem {
 	public EVBBSystemResult analyzeLast(CompanyModel company) {
 		return null;
 	}
-
+	
+	/**
+	 * Evaluates the system's success rate.
+	 * 
+	 * @param company
+	 * @return The ROIC(%) of the EVBB result, null when the result of the EVBB result is not clear.
+	 */
+	public Double evaluate(EVBBSystemResult evbbResult) {
+		final int AFTER_DAYS = 90;
+		//final int PROFIT_THRESHOLD = 10;
+		
+		List<StockQuoteModel> quoteList = evbbResult.getCompany().getQuoteList();
+		if(quoteList.size() <= evbbResult.getDayIndex() + AFTER_DAYS || isEntry(evbbResult)) {
+			return null;
+		}
+		double maxHigh = 0;
+		for(int i = evbbResult.getDayIndex() + 1; i <= evbbResult.getDayIndex() + AFTER_DAYS; ++i) {
+			if(quoteList.get(i).getHigh() > maxHigh) {
+				maxHigh = quoteList.get(i).getHigh();
+			}
+		}
+		double base = entryPoint(evbbResult);
+		return (maxHigh - base) * 100 / base;
+	}
+	
+	public boolean isEntry(EVBBSystemResult evbbResult) {
+		
+		StockQuoteModel quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex());
+		double point = entryPoint(evbbResult);
+		
+		int leftDays = Math.min(WAIT_DAYS_AFTER_SPIKE, evbbResult.getCompany().getQuoteList().size() - evbbResult.getDayIndex() - 1);
+		for(int i = 1; i <= leftDays; ++i) {
+			quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex() + i);
+			if(quote.getLow() <= point && point <= quote.getHigh()) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Get the limit price of entry point.
+	 * @param evbbResult
+	 * @return
+	 */
+	public double entryPoint(EVBBSystemResult evbbResult) {
+		StockQuoteModel quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex());
+		return (quote.getClose() + quote.getOpen()) / 2;
+	}
+	
+	// ---------------------- Private Functions ----------------------------------
+	
+	/**
+	 * Analyze the date that quoteIndex specified of the company.
+	 * 
+	 * @param company
+	 * @param quoteIndex
+	 * @return
+	 */
 	private EVBBSystemResult analyzeByIndex(CompanyModel company, int quoteIndex) {
 		EVBBSystemResult result = new EVBBSystemResult();
 		
@@ -79,18 +139,7 @@ public class EVBBSystem {
 		} else {
 			return null;
 		}
-	}
-	
-	/**
-	 * Evaluates the system's success rate.
-	 * 
-	 * @param company
-	 * @return
-	 */
-	public EVBBSystemResult evaluate(EVBBSystemResult evbbResult) {
-		return null;
-	}
-	
+	}	
 	
 	
 	private boolean testInsiderOwnership(CompanyModel company) {

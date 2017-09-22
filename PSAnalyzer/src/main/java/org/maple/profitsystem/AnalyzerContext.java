@@ -1,6 +1,6 @@
 package org.maple.profitsystem;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -34,19 +34,55 @@ public class AnalyzerContext {
 	public void run() {
 		postLoadData();
 		
+		List<EVBBSystemResult> tmpResults = null;
 		// use EVBB System ot analyze 
-		List<EVBBSystemResult> satisfiedResults = new ArrayList<>();
+		List<EVBBSystemResult> satisfiedResults = new LinkedList<>();
 		for(CompanyModel company : companies) {
 			company.setQuoteList(stockQuoteService.getAllStockQuotesByCompanyId(company.getId()));
-			List<EVBBSystemResult> tmpResults = evbbSystem.analyzeAll(company);
+			tmpResults = evbbSystem.analyzeAll(company);
+			
+			if(tmpResults == null || tmpResults.size() == 0)
+				continue;
+			
 			satisfiedResults.addAll(tmpResults);
-			// output
-			for(EVBBSystemResult result : tmpResults) {
-				
-				logger.info(String.format("%s|%s|%s", result.getCompany(), result.getCompany().getStatistics(), result.getCompany().getQuoteList().get(result.getDayIndex())));
-			}
+			//logger.info(company.getSymbol() + ":" + tmpResults.size());
 		}
 		
+		// output
+		int profitThreshold = 10;
+		
+		logger.info("Satisfied result number: " + satisfiedResults.size());
+		
+		Double roic = null;
+		for(int pth = profitThreshold; pth < 100; ++pth) {
+			int lessNum = 0;
+			int bigNum = 0;
+			int unkonwNum = 0;
+			
+			for(EVBBSystemResult result : satisfiedResults) {
+				if (result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate() < 20170101) {
+					continue;
+				}
+				roic = evbbSystem.evaluate(result);
+				if(roic == null) {
+					unkonwNum++;
+				} else if(roic < pth) {
+					lessNum++;
+				} else {
+					bigNum++;
+				}
+			}
+			
+			double perc = (double)bigNum / (bigNum + lessNum);
+			logger.info(String.format("Weight: %f | ROIC - Perc: %s-%.2f | Big : %s", perc * pth, pth, perc, bigNum));
+			
+			
+		}
+//			logger.info(String.format("%s|%s|%s|%s", result.getCompany().getSymbol(), 
+//					result.getCompany().getName(), 
+//					result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate(),
+//					evbbSystem.evaluate(result))
+//					);
 	}
 	
 	/**
