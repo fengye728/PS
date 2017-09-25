@@ -6,6 +6,13 @@ import org.maple.profitsystem.models.StockQuoteModel;
 
 public class TAUtil {
 
+	/**
+	 * SMA of Volume.(Include targetIndex)
+	 * @param quotes
+	 * @param targetIndex
+	 * @param days
+	 * @return
+	 */
 	public static Integer SMAVolumeByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) {
 		int startIndex = targetIndex - days + 1;
 		if(startIndex < 0) {
@@ -18,6 +25,13 @@ public class TAUtil {
 		return (int)(amountVolume / days);
 	}
 	
+	/**
+	 * EMA of Volume.(Include targetIndex)
+	 * @param quotes
+	 * @param targetIndex
+	 * @param days
+	 * @return
+	 */
 	public static Integer EMAVolumeByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) {
 		int startIndex = targetIndex - days + 1;
 		if(startIndex < 0) {
@@ -210,5 +224,57 @@ public class TAUtil {
 				return quotes.subList(startIndex, endIndex);
 			}
 		}
+	}
+	
+	/**
+	 * Get the normalized price of the quote.
+	 * 
+	 * @param quote
+	 * @return
+	 */
+	public static double NP(StockQuoteModel quote) {
+		if(quote == null) {
+			return 0.0;
+		}
+		return (quote.getHigh() + quote.getLow() + quote.getClose()) / 3;
+	}
+	
+	/**
+	 * Get the [period] period SMAP of NP.(Include targetIndex)
+	 * 
+	 * @param quotes
+	 * @param targetIndex
+	 * @param period
+	 * @return
+	 */
+	public static double SMANP(List<StockQuoteModel> quotes, int targetIndex, int period) {
+		int startIndex = targetIndex - period + 1;
+		if(quotes == null || startIndex < 0) {
+			return 0;
+		}
+		double amountNP = 0;
+		for(int i = startIndex; i < startIndex + period; ++i) {
+			amountNP += NP(quotes.get(i));
+		}
+		return (amountNP / period);
+	}
+	
+	/**
+	 * Get the Mean Deviation in period.(Include targetIndex)
+	 * @param quotes
+	 * @param targetIndex
+	 * @param period
+	 * @return
+	 */
+	public static double MD(List<StockQuoteModel> quotes, int targetIndex, int period) {
+		int startIndex = targetIndex - period + 1;
+		if(quotes == null || startIndex < 0) {
+			return 0;
+		}
+		double amountMD = 0;
+		for(int i = startIndex; i < startIndex + period; ++i) {
+			amountMD += Math.abs(SMANP(quotes, i, i - startIndex + 1) - NP(quotes.get(i)));
+		}
+		return (amountMD / period);		
 	}
 }

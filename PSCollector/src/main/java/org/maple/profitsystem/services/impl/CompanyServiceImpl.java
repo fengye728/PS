@@ -86,7 +86,7 @@ public class CompanyServiceImpl implements CompanyService {
 		FileWriter fw = null;
 		try {
 			
-			File file = new File(properties.getBackupPath() + File.separator + filename + CommonConstants.FILE_SUFFIX_STOCK);
+			File file = new File(properties.getBackupPath() + File.separator + CommonConstants.FILE_PREFIX_STOCK + filename);
 			if(!file.exists())
 				file.createNewFile();
 			fw = new FileWriter(file);
