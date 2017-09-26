@@ -24,9 +24,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class EVBBSystem {
 	
-	public final static int THRESOLD = 30;
+	public final static int THRESOLD = 10;
 	
-	private final static int WAIT_DAYS_AFTER_SPIKE = 3;
+	private final static int ENTRY_WAIT_DAYS_AFTER_SPIKE = 3;
+	
+	public static int EXIT_MAX_WAIT_DAYS = 30;
 	
 	/**
 	 * Analyzes the company and finds all the moments which satisfied the EVBBSystem's condition
@@ -50,6 +52,7 @@ public class EVBBSystem {
 	}
 	
 	public EVBBSystemResult analyzeLast(CompanyModel company) {
+		
 		return null;
 	}
 	
@@ -60,11 +63,11 @@ public class EVBBSystem {
 	 * @return The ROIC(%) of the EVBB result, null when the result of the EVBB result is not clear.
 	 */
 	public Double evaluate(EVBBSystemResult evbbResult) {
-		final int AFTER_DAYS = 90;
+		final int AFTER_DAYS = 30;
 		//final int PROFIT_THRESHOLD = 10;
 		
 		List<StockQuoteModel> quoteList = evbbResult.getCompany().getQuoteList();
-		if(quoteList.size() <= evbbResult.getDayIndex() + AFTER_DAYS || isEntry(evbbResult)) {
+		if(quoteList.size() <= evbbResult.getDayIndex() + AFTER_DAYS) {
 			return null;
 		}
 		double maxHigh = 0;
@@ -77,19 +80,42 @@ public class EVBBSystem {
 		return (maxHigh - base) * 100 / base;
 	}
 	
-	public boolean isEntry(EVBBSystemResult evbbResult) {
+	public Double evaluateByCCI(EVBBSystemResult evbbResult) {
+		final int MAX_PERIOD = 30;
+		List<StockQuoteModel> quotes = evbbResult.getCompany().getQuoteList();
+		int len = quotes.size() < evbbResult.getDayIndex() + MAX_PERIOD ? quotes.size() : evbbResult.getDayIndex() + MAX_PERIOD;
+		
+		double lastCCI = 0;
+		int i = evbbResult.getDayIndex();
+		for(; i < len && lastCCI >= 0; i++) {
+			lastCCI = TAUtil.CCI(quotes, i);
+		}
+		--i;
+		if(i <= evbbResult.getDayIndex()) {
+			return null;
+		}
+		double entryP = entryPoint(evbbResult);
+		return (quotes.get(i).getOpen() - entryP) / entryP;
+	}
+	/**
+	 * Check if the evbbResult can entry.
+	 * 
+	 * @param evbbResult
+	 * @return Index of entry date in quotes if entry success, null otherwise.  
+	 */
+	public Integer isEntry(EVBBSystemResult evbbResult) {
 		
 		StockQuoteModel quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex());
 		double point = entryPoint(evbbResult);
 		
-		int leftDays = Math.min(WAIT_DAYS_AFTER_SPIKE, evbbResult.getCompany().getQuoteList().size() - evbbResult.getDayIndex() - 1);
+		int leftDays = Math.min(ENTRY_WAIT_DAYS_AFTER_SPIKE, evbbResult.getCompany().getQuoteList().size() - evbbResult.getDayIndex() - 1);
 		for(int i = 1; i <= leftDays; ++i) {
 			quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex() + i);
 			if(quote.getLow() <= point && point <= quote.getHigh()) {
-				return true;
+				return evbbResult.getDayIndex() + i;
 			}
 		}
-		return false;
+		return null;
 	}
 	
 	/**
@@ -102,6 +128,29 @@ public class EVBBSystem {
 		return (quote.getClose() + quote.getOpen()) / 2;
 	}
 	
+	/**
+	 * Get index of exit date by Three Days Difference.
+	 * @param evbbResult
+	 * @return The index of exit date satisfied the TDD requirements or reach the max wait days.
+	 */
+	public int getExitDateIndexByTDD(int entryIndex, EVBBSystemResult evbbResult) {
+		final double TDD_THRESHOLD = 0;
+		// Leave when second TDD is negative.
+		final int NEGATIVE_TIME_THRESHOLD = 2;
+		List<StockQuoteModel> quotes = evbbResult.getCompany().getQuoteList();
+		
+		int negativeCount = 0;
+		for(int i = entryIndex; i < quotes.size(); ++i) {
+			if(TAUtil.ThreeDayDifference(quotes, entryIndex) < TDD_THRESHOLD) {
+				++negativeCount;
+			}
+			if(negativeCount >= NEGATIVE_TIME_THRESHOLD) {
+				return i;
+			}
+		}
+		
+		return Math.min(entryIndex + EXIT_MAX_WAIT_DAYS, quotes.size() - 1);
+	}
 	// ---------------------- Private Functions ----------------------------------
 	
 	/**
@@ -135,10 +184,12 @@ public class EVBBSystem {
 			result.setCompany(company);
 			result.setDayIndex(quoteIndex);
 			
-			return result;
-		} else {
-			return null;
+			if(isEntry(result) != null) {
+				return result;
+			}
 		}
+		return null;
+
 	}	
 	
 	

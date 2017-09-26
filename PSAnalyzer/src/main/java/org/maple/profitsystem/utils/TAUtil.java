@@ -5,6 +5,20 @@ import java.util.List;
 import org.maple.profitsystem.models.StockQuoteModel;
 
 public class TAUtil {
+	
+	/**
+	 * Get the index before targetIndex [period] days.(Include targetIndex)
+	 * @param targetIndex
+	 * @param period
+	 * @return
+	 */
+	public static int getBeforePeriodIndex(int targetIndex, int period) {
+		int startIndex = targetIndex - period + 1;
+		if(startIndex < 0) {
+			startIndex = 0;
+		}
+		return startIndex;
+	}
 
 	/**
 	 * SMA of Volume.(Include targetIndex)
@@ -65,13 +79,21 @@ public class TAUtil {
 		return maxVolumeOfResistance;
 	}
 	
-	public static Double MaxHighPriceByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) {
+	/**
+	 * The highest price in [days] period from targetIndex - days + 1(Include) to targetIndex(Include).
+	 * 
+	 * @param quotes
+	 * @param targetIndex
+	 * @param days
+	 * @return
+	 */
+	public static double MaxHighPriceByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) {
 		int startIndex = targetIndex - days + 1;
 		if(startIndex < 0) {
-			return 0.0;
+			startIndex = 0;
+			days = targetIndex + 1;
 		}
 		
-		// get volume of max volume resistance
 		double maxHighPrice = 0;
 		for(int i = startIndex; i < startIndex + days; ++i) {
 			if(quotes.get(i).getHigh() > maxHighPrice) {
@@ -81,6 +103,17 @@ public class TAUtil {
 		return maxHighPrice;	
 	}
 	
+	public static double LowestPriceByIndex(List<StockQuoteModel> quotes, int targetIndex, int period) {
+		int startIndex = getBeforePeriodIndex(targetIndex, period);
+		
+		double lowestPrice = Double.MAX_VALUE;
+		for(int i = startIndex; i <= targetIndex; ++i) {
+			if(quotes.get(i).getLow() < lowestPrice) {
+				lowestPrice = quotes.get(i).getLow();
+			}
+		}
+		return lowestPrice;
+	}
 	/**
 	 * Get simple moving average of volume from targetDt-days(exclusive) to targetDt(inclusive).
 	 * 
@@ -276,5 +309,61 @@ public class TAUtil {
 			amountMD += Math.abs(SMANP(quotes, i, i - startIndex + 1) - NP(quotes.get(i)));
 		}
 		return (amountMD / period);		
+	}
+	
+	/**
+	 * Commodity Channel Index (CCI): A momentum indicator.(For EVBBSystem)
+	 * 
+	 * @param quotes
+	 * @param targetIndex
+	 * @return
+	 */
+	public static Double CCI(List<StockQuoteModel> quotes, int targetIndex) {
+		final int CCI_PERIOD = 20;
+		if(targetIndex - CCI_PERIOD < 0) {
+			return null;
+		} 
+		return (NP(quotes.get(targetIndex)) - SMANP(quotes, targetIndex, CCI_PERIOD)) / (0.15 * MD(quotes, targetIndex, CCI_PERIOD));
+	}
+	
+	/**
+	 * Five Day Oscillator.(For EVBBSystem)
+	 * 
+	 * 	Remark:
+	 * 		Bearish: < 30
+	 * 		Neutral: 30 ~ 70
+	 * 		Bullish: > 70
+	 * @param quotes
+	 * @param targetIndex
+	 * @return
+	 */
+	public static Double FiveDayOscillator(List<StockQuoteModel> quotes, int targetIndex) {
+		final int OSCILLATOR_PERIOD = 5;
+		if(targetIndex - OSCILLATOR_PERIOD < 0) {
+			return null;
+		}
+		double highestPrice = MaxHighPriceByIndex(quotes, targetIndex, OSCILLATOR_PERIOD);
+		double lowestPrice = LowestPriceByIndex(quotes, targetIndex, OSCILLATOR_PERIOD);
+		double A = highestPrice - quotes.get(targetIndex - OSCILLATOR_PERIOD).getOpen();
+		double B = quotes.get(targetIndex).getClose() - lowestPrice;
+		
+		double oscillator = ((A + B) * 100) / ((highestPrice - lowestPrice) * 2);
+		
+		return oscillator;
+	}
+	
+	/**
+	 * Three Days Difference: calculated by FiveDayOscillator(today) - FiveDayOscillator(today - 2).
+	 * 	
+	 * @param quotes
+	 * @param targetIndex
+	 * @return
+	 */
+	public static Double ThreeDayDifference(List<StockQuoteModel> quotes, int targetIndex) {
+		final int DIFFERENCE_PERIOD = 2;
+		if(targetIndex - DIFFERENCE_PERIOD < 0) {
+			return null;
+		}
+		return FiveDayOscillator(quotes, targetIndex) - FiveDayOscillator(quotes, targetIndex - DIFFERENCE_PERIOD);
 	}
 }

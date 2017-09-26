@@ -54,35 +54,32 @@ public class AnalyzerContext {
 		logger.info("Satisfied result number: " + satisfiedResults.size());
 		
 		Double roic = null;
-		for(int pth = profitThreshold; pth < 100; ++pth) {
-			int lessNum = 0;
-			int bigNum = 0;
-			int unkonwNum = 0;
-			
-			for(EVBBSystemResult result : satisfiedResults) {
-				if (result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate() < 20170101) {
-					continue;
-				}
-				roic = evbbSystem.evaluate(result);
-				if(roic == null) {
-					unkonwNum++;
-				} else if(roic < pth) {
-					lessNum++;
-				} else {
-					bigNum++;
-				}
+
+		int bigNum = 0;
+		int lessNum = 0;
+		int unkonwNum = 0;
+		double totoalRoic = 0;
+		double gainRoic = 0;
+		
+		for(EVBBSystemResult result : satisfiedResults) {
+//				if (result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate() < 20170101) {
+//					continue;
+//				}
+			roic = evbbSystem.evaluateByCCI(result);
+			if(roic == null) {
+				unkonwNum++;
+			} else if(roic < 0) {
+				lessNum++;
+				totoalRoic += roic;
+			} else {
+				bigNum++;
+				gainRoic += roic;
+				totoalRoic += roic;
 			}
 			
-			double perc = (double)bigNum / (bigNum + lessNum);
-			logger.info(String.format("Weight: %f | ROIC - Perc: %s-%.2f | Big : %s", perc * pth, pth, perc, bigNum));
-			
-			
 		}
-//			logger.info(String.format("%s|%s|%s|%s", result.getCompany().getSymbol(), 
-//					result.getCompany().getName(), 
-//					result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate(),
-//					evbbSystem.evaluate(result))
-//					);
+		double perc = (double)bigNum / (bigNum + lessNum);
+		logger.info(String.format("Total: %.2f | Gain: %.2f | Perc : %.2f - %d", totoalRoic, gainRoic, perc, bigNum));
 	}
 	
 	/**
