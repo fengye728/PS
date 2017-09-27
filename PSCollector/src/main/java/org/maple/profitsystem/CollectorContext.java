@@ -67,22 +67,22 @@ public class CollectorContext {
 		
 	}
 	
-	@Scheduled(cron = "0 0 0 */7 * *")
+	@Scheduled(cron = "${schedule.cron.companies}", zone = "${schedule.timezone}")
 	public void scheduleUpdateCompanies() {
 		companyInfoCollector.addListNewCompaniesBaseInfo();
 	}
 	
-	@Scheduled(cron = "0 0 1 */5 * *")
+	@Scheduled(cron = "${schedule.cron.statistics}", zone = "${schedule.timezone}")
 	public void scheduleUpdateCompaniesStatistics() {
 		companyInfoCollector.updateListCompanyStatistics();
 	}
 	
-	@Scheduled(cron = "0 40 16 * * MON-FRI")
+	@Scheduled(cron = "${schedule.cron.quotes}", zone = "${schedule.timezone}")
 	public void scheduleUpdateCompaniesQuotes() {
 		companyInfoCollector.updateListCompanyQuotes();
 	}
 	
-	@Scheduled(cron = "0 0 23 * * MON-FRI")
+	@Scheduled(cron = "${schedule.cron.persist}", zone = "${schedule.timezone}")
 	public void scheduleBackupToDisk() {
 		storeListCompanyFullInfoToDisk();
 	}

@@ -344,7 +344,7 @@ public class TAUtil {
 		}
 		double highestPrice = MaxHighPriceByIndex(quotes, targetIndex, OSCILLATOR_PERIOD);
 		double lowestPrice = LowestPriceByIndex(quotes, targetIndex, OSCILLATOR_PERIOD);
-		double A = highestPrice - quotes.get(targetIndex - OSCILLATOR_PERIOD).getOpen();
+		double A = highestPrice - quotes.get(targetIndex - OSCILLATOR_PERIOD + 1).getOpen();
 		double B = quotes.get(targetIndex).getClose() - lowestPrice;
 		
 		double oscillator = ((A + B) * 100) / ((highestPrice - lowestPrice) * 2);

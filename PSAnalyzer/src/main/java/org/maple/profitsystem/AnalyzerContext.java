@@ -65,7 +65,7 @@ public class AnalyzerContext {
 //				if (result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate() < 20170101) {
 //					continue;
 //				}
-			roic = evbbSystem.evaluateByCCI(result);
+			roic = evbbSystem.evaluateByTDD(result);
 			if(roic == null) {
 				unkonwNum++;
 			} else if(roic < 0) {

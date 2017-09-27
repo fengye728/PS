@@ -97,6 +97,21 @@ public class EVBBSystem {
 		double entryP = entryPoint(evbbResult);
 		return (quotes.get(i).getOpen() - entryP) / entryP;
 	}
+	
+	public Double evaluateByTDD(EVBBSystemResult evbbResult) {
+		Integer entryIndex = isEntry(evbbResult);
+		if(null == entryIndex) {
+			return null;
+		}
+		int exitIndex = getExitDateIndexByTDD(entryIndex, evbbResult);
+		
+		double entryP = entryPoint(evbbResult);
+		double exitP = evbbResult.getCompany().getQuoteList().get(exitIndex).getClose();
+		
+		double roic = (exitP - entryP) / entryP;
+		System.out.println(String.format("%s - %.2f - %d - %d", evbbResult.getCompany().getSymbol(), roic, exitIndex - entryIndex, evbbResult.getCompany().getQuoteList().get(entryIndex).getQuoteDate()));
+		return roic;
+	}
 	/**
 	 * Check if the evbbResult can entry.
 	 * 
@@ -141,11 +156,11 @@ public class EVBBSystem {
 		
 		int negativeCount = 0;
 		for(int i = entryIndex; i < quotes.size(); ++i) {
-			if(TAUtil.ThreeDayDifference(quotes, entryIndex) < TDD_THRESHOLD) {
+			if(TAUtil.ThreeDayDifference(quotes, i) < TDD_THRESHOLD) {
 				++negativeCount;
-			}
-			if(negativeCount >= NEGATIVE_TIME_THRESHOLD) {
-				return i;
+				if(negativeCount >= NEGATIVE_TIME_THRESHOLD) {
+					return i;
+				}
 			}
 		}
 		
