@@ -2,6 +2,8 @@ package org.maple.profitsystem.utils;
 
 import java.util.List;
 
+import org.maple.profitsystem.constants.CommonConstants;
+import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.StockQuoteModel;
 
 public class TAUtil {
@@ -26,11 +28,12 @@ public class TAUtil {
 	 * @param targetIndex
 	 * @param days
 	 * @return
+	 * @throws PSException 
 	 */
-	public static Integer SMAVolumeByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) {
+	public static int SMAVolumeByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) throws PSException {
 		int startIndex = targetIndex - days + 1;
 		if(startIndex < 0) {
-			return 0;
+			throw new PSException("No enough records for SMAVolumeByIndex");
 		}
 		long amountVolume = 0;
 		for(int i = startIndex; i < startIndex + days; ++i) {
@@ -45,11 +48,12 @@ public class TAUtil {
 	 * @param targetIndex
 	 * @param days
 	 * @return
+	 * @throws PSException 
 	 */
-	public static Integer EMAVolumeByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) {
+	public static int EMAVolumeByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) throws PSException {
 		int startIndex = targetIndex - days + 1;
 		if(startIndex < 0) {
-			return 0;
+			throw new PSException("No enough records for EMAVolumeByIndex");
 		}
 		
 		int emaLast = quotes.get(startIndex).getVolume();
@@ -61,17 +65,27 @@ public class TAUtil {
 		return emaLast;
 	}
 	
-	public static Integer MaxResistanceVolumeByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) {
+	/**
+	 * The max volume of overhead resistance for targetIndex in the past days(Exclude targetIndex).
+	 * 
+	 * @param quotes
+	 * @param targetIndex
+	 * @param days
+	 * @return The max volume
+	 * @throws PSException 
+	 */
+	public static int MaxResistanceVolumeByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) throws PSException {
 		// End to day before targetDt
 		int startIndex = targetIndex - days;
 		if(startIndex < 0) {
-			return 0;
+			throw new PSException("No enough records for MaxResistanceVolumeByIndex");
 		}
 		
 		// get volume of max volume resistance
 		int maxVolumeOfResistance = 0;
-		for(int i = startIndex; i < startIndex + days; ++i) {
-			if(quotes.get(i).getHigh() >= quotes.get(targetIndex).getClose() && quotes.get(i).getVolume() > maxVolumeOfResistance) {
+		double targetMidPrice = (quotes.get(targetIndex).getLow() + quotes.get(targetIndex).getHigh()) / 2;
+		for(int i = startIndex; i < targetIndex; ++i) {
+			if(quotes.get(i).getHigh() >= targetMidPrice && quotes.get(i).getVolume() > maxVolumeOfResistance) {
 				// resistance line of max volume now
 				maxVolumeOfResistance = quotes.get(i).getVolume();
 			}
@@ -103,6 +117,14 @@ public class TAUtil {
 		return maxHighPrice;	
 	}
 	
+	/**
+	 * The lowest price in [days] period from targetIndex - days + 1(Include) to targetIndex(Include).
+	 * 
+	 * @param quotes
+	 * @param targetIndex
+	 * @param days
+	 * @return
+	 */
 	public static double LowestPriceByIndex(List<StockQuoteModel> quotes, int targetIndex, int period) {
 		int startIndex = getBeforePeriodIndex(targetIndex, period);
 		
@@ -114,94 +136,9 @@ public class TAUtil {
 		}
 		return lowestPrice;
 	}
-	/**
-	 * Get simple moving average of volume from targetDt-days(exclusive) to targetDt(inclusive).
-	 * 
-	 * @param company
-	 * @param targetDt
-	 * @param days
-	 * @return SMA of volume if success, otherwise zero.
-	 */
-	public static Integer SMAVolume(List<StockQuoteModel> quotes, int targetDt, int days) {
-		int startIndex = getBeforeDaysStockQuoteIndex(quotes, targetDt, days);
-		if(startIndex == -1) {
-			return 0;
-		}
-		long amountVolume = 0;
-		for(int i = startIndex; i < startIndex + days; ++i) {
-			amountVolume += quotes.get(i).getVolume();
-		}
-		return (int)(amountVolume / days);
-	}
-	
-	public static Integer EMAVolume(List<StockQuoteModel> quotes, int targetDt, int days) {
-		int startIndex = getBeforeDaysStockQuoteIndex(quotes, targetDt, days);
-		if(startIndex == -1) {
-			return 0;
-		}
-		
-		int emaLast = quotes.get(startIndex).getVolume();
-		
-		for(int i = startIndex + 1; i < startIndex + days; ++i) {
-			int n = i - startIndex + 1;
-			emaLast = (2 * quotes.get(i).getVolume() + (n - 1) * emaLast) / (n + 1);
-		}
-		return emaLast;
-	}
 	
 	/**
-	 * The max volume of overhead resistance for targetDt in the past days(Exclude targetDt).
-	 * 
-	 * @param quotes
-	 * @param targetDt
-	 * @param days
-	 * @return Otherwise zero.
-	 */
-	public static Integer MaxResistanceVolume(List<StockQuoteModel> quotes, int targetDt, int days) {
-		// End to day before targetDt
-		int startIndex = getBeforeDaysStockQuoteIndex(quotes, targetDt - 1, days);
-		if(startIndex == -1) {
-			return 0;
-		}
-		
-		int targetDayIndex = startIndex + targetDt - 1;
-		
-		// get volume of max volume resistance
-		int maxVolumeOfResistance = 0;
-		for(int i = startIndex; i < startIndex + days; ++i) {
-			if(quotes.get(i).getHigh() >= quotes.get(targetDayIndex).getClose() && quotes.get(i).getVolume() > maxVolumeOfResistance) {
-				// resistance line of max volume now
-				maxVolumeOfResistance = quotes.get(i).getVolume();
-			}
-		}
-		return maxVolumeOfResistance;
-	}
-	
-	/**
-	 * The max high price of [days] days before [targetDt].
-	 * 
-	 * @param quotes
-	 * @param targetDt
-	 * @param days
-	 * @return
-	 */
-	public static Double MaxHighPrice(List<StockQuoteModel> quotes, int targetDt, int days) {
-		int startIndex = getBeforeDaysStockQuoteIndex(quotes, targetDt, days);
-		if(startIndex == -1) {
-			return 0.0;
-		}
-		
-		// get volume of max volume resistance
-		double maxHighPrice = 0;
-		for(int i = startIndex; i < startIndex + days; ++i) {
-			if(quotes.get(i).getHigh() > maxHighPrice) {
-				maxHighPrice = quotes.get(i).getHigh();
-			}
-		}
-		return maxHighPrice;	
-	}
-	/**
-	 * See getBeforeDaysStockQuotes.
+	 * Get the quotes whose date between endDt-days(exclusive) and endDt(Inclusive).
 	 * 
 	 * 		The list from value of return(Inclusive) to startIndex + days(Exclusive).
 	 * 
@@ -230,44 +167,16 @@ public class TAUtil {
 		return result;
 	}
 	
-	
-	/**
-	 * Get the quotes whose date between endDt-days(exclusive) and endDt(Inclusive).
-	 * 
-	 * @param quotes
-	 * @param endDt
-	 * @param days More then zero.
-	 * @return List of StockQuoteModel if these satisfied condition existed, otherwise null.
-	 */
-	public static List<StockQuoteModel> getBeforeDaysStockQuotes(List<StockQuoteModel> quotes ,int endDt, int days) {
-		if(quotes.isEmpty() || quotes.size() < days) {
-			return null;
-		} else {
-			int endIndex = quotes.size();	// exclusive
-			
-			while(endIndex - days >= 0) {
-				if(quotes.get(endIndex - 1).getQuoteDate() <= endDt) {
-					break;
-				}
-			}
-			int startIndex = endIndex - days; // inclusive
-			if(startIndex < 0) {
-				return null;
-			} else {
-				return quotes.subList(startIndex, endIndex);
-			}
-		}
-	}
-	
 	/**
 	 * Get the normalized price of the quote.
 	 * 
 	 * @param quote
 	 * @return
+	 * @throws PSException 
 	 */
-	public static double NP(StockQuoteModel quote) {
+	public static double NP(StockQuoteModel quote) throws PSException {
 		if(quote == null) {
-			return 0.0;
+			throw new PSException(CommonConstants.ERROR_MSG_QUOTE_NULL);
 		}
 		return (quote.getHigh() + quote.getLow() + quote.getClose()) / 3;
 	}
@@ -279,8 +188,9 @@ public class TAUtil {
 	 * @param targetIndex
 	 * @param period
 	 * @return
+	 * @throws PSException 
 	 */
-	public static double SMANP(List<StockQuoteModel> quotes, int targetIndex, int period) {
+	public static double SMANP(List<StockQuoteModel> quotes, int targetIndex, int period) throws PSException {
 		int startIndex = targetIndex - period + 1;
 		if(quotes == null || startIndex < 0) {
 			return 0;
@@ -298,11 +208,12 @@ public class TAUtil {
 	 * @param targetIndex
 	 * @param period
 	 * @return
+	 * @throws PSException 
 	 */
-	public static double MD(List<StockQuoteModel> quotes, int targetIndex, int period) {
+	public static double MD(List<StockQuoteModel> quotes, int targetIndex, int period) throws PSException {
 		int startIndex = targetIndex - period + 1;
 		if(quotes == null || startIndex < 0) {
-			return 0;
+			throw new PSException("quotes is null or quotes have not enough records!");
 		}
 		double amountMD = 0;
 		for(int i = startIndex; i < startIndex + period; ++i) {
@@ -317,11 +228,12 @@ public class TAUtil {
 	 * @param quotes
 	 * @param targetIndex
 	 * @return
+	 * @throws PSException 
 	 */
-	public static Double CCI(List<StockQuoteModel> quotes, int targetIndex) {
+	public static double CCI(List<StockQuoteModel> quotes, int targetIndex) throws PSException {
 		final int CCI_PERIOD = 20;
 		if(targetIndex - CCI_PERIOD < 0) {
-			return null;
+			throw new PSException("No enough records in quotes for CCI");
 		} 
 		return (NP(quotes.get(targetIndex)) - SMANP(quotes, targetIndex, CCI_PERIOD)) / (0.15 * MD(quotes, targetIndex, CCI_PERIOD));
 	}
@@ -336,11 +248,12 @@ public class TAUtil {
 	 * @param quotes
 	 * @param targetIndex
 	 * @return
+	 * @throws PSException 
 	 */
-	public static Double FiveDayOscillator(List<StockQuoteModel> quotes, int targetIndex) {
+	public static double FiveDayOscillator(List<StockQuoteModel> quotes, int targetIndex) throws PSException {
 		final int OSCILLATOR_PERIOD = 5;
 		if(targetIndex - OSCILLATOR_PERIOD < 0) {
-			return null;
+			throw new PSException("No enough records for FDO(Five Day Oscillator)");
 		}
 		double highestPrice = MaxHighPriceByIndex(quotes, targetIndex, OSCILLATOR_PERIOD);
 		double lowestPrice = LowestPriceByIndex(quotes, targetIndex, OSCILLATOR_PERIOD);
@@ -358,8 +271,9 @@ public class TAUtil {
 	 * @param quotes
 	 * @param targetIndex
 	 * @return
+	 * @throws PSException 
 	 */
-	public static Double ThreeDayDifference(List<StockQuoteModel> quotes, int targetIndex) {
+	public static Double ThreeDayDifference(List<StockQuoteModel> quotes, int targetIndex) throws PSException {
 		final int DIFFERENCE_PERIOD = 2;
 		if(targetIndex - DIFFERENCE_PERIOD < 0) {
 			return null;

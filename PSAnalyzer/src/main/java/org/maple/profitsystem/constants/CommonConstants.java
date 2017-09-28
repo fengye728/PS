@@ -20,4 +20,7 @@ public class CommonConstants {
 	public final static String CSV_SURROUNDER_OF_FIELD = "\"";
 	public final static String CSV_NEWLINE = "\n";
 	public final static String CSV_NEWLINE_REG = "[\r]?\n";
+	
+	// ------------------- Exception Message ---------------------
+	public final static String ERROR_MSG_QUOTE_NULL = "quote is null!";
 }
