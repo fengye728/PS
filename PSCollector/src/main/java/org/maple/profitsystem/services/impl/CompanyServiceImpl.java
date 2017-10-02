@@ -192,6 +192,7 @@ public class CompanyServiceImpl implements CompanyService {
 		List<StockQuoteModel> quotes = record.getQuoteList();
 		int count = stockQuoteService.addStockQuoteList(quotes);
 		if(count == 0) {
+			// update fail, set last quote dt to previous
 			return 0;
 		} else {
 			record.setLastUpdateDt(new Date());
