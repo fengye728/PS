@@ -130,7 +130,9 @@ public class EVBBSystem {
 		System.out.println(String.format("Exit DT:%s, Exit Price:%.2f", evbbResult.getCompany().getQuoteList().get(exitIndex).getQuoteDate(), exitP));
 		double maxPrice = TAUtil.MaxHighPriceByIndex(evbbResult.getCompany().getQuoteList(), exitIndex, exitIndex - entryIndex);
 		System.out.println("Higher Pirce in period:" + maxPrice + " ROIC: " + (maxPrice - entryP) / entryP);
-		System.out.println();
+		if((maxPrice - entryP) / entryP > 0.15) {
+			System.out.println();
+		}
 		return result;
 	}
 	/**
@@ -147,7 +149,7 @@ public class EVBBSystem {
 		int leftDays = Math.min(ENTRY_WAIT_DAYS_AFTER_SPIKE, evbbResult.getCompany().getQuoteList().size() - evbbResult.getDayIndex() - 1);
 		for(int i = 1; i <= leftDays; ++i) {
 			quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex() + i);
-			if(quote.getLow() <= point && point <= quote.getHigh()) {
+			if(quote.getLow() <= point) {
 				return evbbResult.getDayIndex() + i;
 			}
 		}
@@ -177,6 +179,7 @@ public class EVBBSystem {
 		List<StockQuoteModel> quotes = evbbResult.getCompany().getQuoteList();
 		
 		int negativeCount = 0;
+		System.out.println(quotes.get(entryIndex - 1));
 		for(int i = entryIndex; i < quotes.size(); ++i) {
 			double fdo = TAUtil.FiveDayOscillator(quotes, i);
 			double tdd = TAUtil.ThreeDayDifference(quotes, i);
