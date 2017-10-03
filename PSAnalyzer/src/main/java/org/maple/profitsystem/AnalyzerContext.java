@@ -34,7 +34,6 @@ public class AnalyzerContext {
 	
 	@Autowired
 	private EVBBSystem evbbSystem;
-	
 	public void run() {
 		postLoadData();
 		
@@ -51,6 +50,7 @@ public class AnalyzerContext {
 //			}
 			company.setQuoteList(stockQuoteService.getAllStockQuotesByCompanyId(company.getId()));
 			tmpResults = evbbSystem.analyzeAll(company);
+			
 			
 			if(tmpResults == null || tmpResults.size() == 0)
 				continue;
