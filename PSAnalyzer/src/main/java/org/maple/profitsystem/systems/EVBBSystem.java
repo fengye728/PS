@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class EVBBSystem {
 	
-	public final static int THRESOLD = 10;
+	public final static int THRESOLD = 11;
 	
 	private final static int ENTRY_WAIT_DAYS_AFTER_SPIKE = 3;
 	
@@ -114,6 +114,16 @@ public class EVBBSystem {
 		double entryP = entryPoint(evbbResult);
 		System.out.println(String.format("Ent DT:%s, Ent Price:%.2f", evbbResult.getCompany().getQuoteList().get(entryIndex).getQuoteDate(), entryP));
 		
+		// TODO For debug
+		CompanyModel company = evbbResult.getCompany();
+		String info = String.format("%s,%s | 50SMAVolume:%d, 50EMAVolume:%d - MaxResistanceVolume:%d", company.getSymbol(), company.getSector(),
+				TAUtil.SMAVolumeByIndex(company.getQuoteList(), evbbResult.getDayIndex() - 1, 50),
+				TAUtil.EMAVolumeByIndex(company.getQuoteList(), evbbResult.getDayIndex() - 1, 50),
+				TAUtil.MaxResistanceVolumeByIndex(company.getQuoteList(), evbbResult.getDayIndex(), 50));
+		System.out.println(info);
+
+		
+		
 		
 		int exitIndex = Math.min(getExitDateIndexByTDD(evbbResult.getDayIndex(), evbbResult) + 1, evbbResult.getCompany().getQuoteList().size() - 1);
 		double exitP = evbbResult.getCompany().getQuoteList().get(exitIndex).getOpen();
@@ -133,6 +143,7 @@ public class EVBBSystem {
 		if((maxPrice - entryP) / entryP > 0.15) {
 			System.out.println();
 		}
+		System.out.println();
 		return result;
 	}
 	/**
@@ -142,8 +153,24 @@ public class EVBBSystem {
 	 * @return Index of entry date in quotes if entry success, null otherwise.  
 	 */
 	public Integer getEntryDateIndex(EVBBSystemResult evbbResult) {
-		
 		StockQuoteModel quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex());
+		
+		// TODO Any no trading  before 30 days
+		if(hasNoTradingDayBefore(evbbResult.getCompany(), evbbResult.getDayIndex())) {
+			return null;
+		}
+		
+		// TODO FDO Filter
+		try {
+			if(TAUtil.FiveDayOscillator(evbbResult.getCompany().getQuoteList(), evbbResult.getDayIndex()) < 70) {
+				return null;
+			}
+		} catch (PSException e) {
+			e.printStackTrace();
+		}
+		
+		
+
 		double point = entryPoint(evbbResult);
 		
 		int leftDays = Math.min(ENTRY_WAIT_DAYS_AFTER_SPIKE, evbbResult.getCompany().getQuoteList().size() - evbbResult.getDayIndex() - 1);
@@ -163,7 +190,7 @@ public class EVBBSystem {
 	 */
 	public double entryPoint(EVBBSystemResult evbbResult) {
 		StockQuoteModel quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex());
-		return (quote.getClose() + quote.getOpen()) / 2;
+		return (quote.getHigh() + quote.getLow()) / 2;
 	}
 	
 	/**
@@ -173,23 +200,31 @@ public class EVBBSystem {
 	 * @throws PSException 
 	 */
 	public int getExitDateIndexByTDD(int entryIndex, EVBBSystemResult evbbResult) throws PSException {
-		final double TDD_THRESHOLD = -20;
+		final double TDD_THRESHOLD = 0;
+		final int FDO_BEARISH_THRESHOLD = 30; 
 		// Leave when second TDD is negative.
-		final int NEGATIVE_TIME_THRESHOLD = 5;
+		final int NEGATIVE_TIME_THRESHOLD = 2;
+		
 		List<StockQuoteModel> quotes = evbbResult.getCompany().getQuoteList();
 		
 		int negativeCount = 0;
+		boolean lastOverThreshold = true;
 		System.out.println(quotes.get(entryIndex - 1));
 		for(int i = entryIndex; i < quotes.size(); ++i) {
 			double fdo = TAUtil.FiveDayOscillator(quotes, i);
 			double tdd = TAUtil.ThreeDayDifference(quotes, i);
 			
 			System.out.println(String.format("%.2f\t%.2f\t%s", fdo, tdd, quotes.get(i).toString()));
-			if(tdd < TDD_THRESHOLD) {
-				++negativeCount;
-				if(negativeCount == NEGATIVE_TIME_THRESHOLD) {
+			if(tdd <= TDD_THRESHOLD) {
+				if(lastOverThreshold || fdo < FDO_BEARISH_THRESHOLD) {
+					lastOverThreshold = false;
+					++negativeCount;
+				}
+				if(negativeCount >= NEGATIVE_TIME_THRESHOLD) {
 					return i;
 				}
+			} else {
+				lastOverThreshold = true;
 			}
 		}
 		
@@ -205,6 +240,7 @@ public class EVBBSystem {
 	 * @return
 	 */
 	private EVBBSystemResult analyzeByIndex(CompanyModel company, int quoteIndex) {
+		
 		EVBBSystemResult result = new EVBBSystemResult();
 		
 		// fundamental requirements
@@ -234,7 +270,20 @@ public class EVBBSystem {
 		}
 		return null;
 
-	}	
+	}
+	
+	private boolean hasNoTradingDayBefore(CompanyModel company, int targetIndex) {
+		final int BEFORE_DAYS = 30;
+		
+		int beforeDays = Math.min(BEFORE_DAYS, targetIndex);
+		List<StockQuoteModel> quotes = company.getQuoteList();
+		for(int i = targetIndex - beforeDays; i < targetIndex - 1; ++i) {
+			if(quotes.get(i).getVolume() == 0) {
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	
 	private boolean testInsiderOwnership(CompanyModel company) {
@@ -261,7 +310,7 @@ public class EVBBSystem {
 	}
 	
 	private boolean testLowResistance(CompanyModel company, int targetIndex) {
-		final int PAST_YEAR_DAYS = 260;
+		final int PAST_YEAR_DAYS = 250;
 		final int MULTIPLE_THRESHOLD = 2;
 		final int SMA_DAYS = 50;
 		if(targetIndex < PAST_YEAR_DAYS) {
@@ -384,7 +433,9 @@ public class EVBBSystem {
 		}
 		List<StockQuoteModel> quotes = company.getQuoteList();
 		try {
-			if(TAUtil.EMAVolumeByIndex(quotes, targetIndex - 1, EMA_SMA_DAYS) <= TAUtil.SMAVolumeByIndex(quotes, targetIndex - 1, EMA_SMA_DAYS) * SMA_TIMES) {
+			double ema = TAUtil.EMAVolumeByIndex(quotes, targetIndex - 1, EMA_SMA_DAYS);
+			double sma = TAUtil.SMAVolumeByIndex(quotes, targetIndex - 1, EMA_SMA_DAYS);
+			if(sma < ema && ema < sma *  SMA_TIMES) {
 				return true;
 			} else {
 				return false;

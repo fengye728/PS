@@ -35,33 +35,20 @@ public class AnalyzerContext {
 	@Autowired
 	private EVBBSystem evbbSystem;
 	
-	public void printDebug(List<EVBBSystemResult> companyResultList) throws PSException {
-	
-		for(EVBBSystemResult result : companyResultList) {
-			CompanyModel company = result.getCompany();
-			
-			String info = String.format("%s,%s | 50SMAVolume:%d, 50EMAVolume:%d - MaxResistanceVolume:%d", company.getSymbol(), company.getSector(),
-					TAUtil.SMAVolumeByIndex(company.getQuoteList(), result.getDayIndex() - 1, 50),
-					TAUtil.EMAVolumeByIndex(company.getQuoteList(), result.getDayIndex() - 1, 50),
-					TAUtil.MaxResistanceVolumeByIndex(company.getQuoteList(), result.getDayIndex(), 50));
-			
-			System.out.println(info);
-			try {
-				evbbSystem.evaluateByTDD(result);
-			} catch (PSException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	
 	public void run() {
 		postLoadData();
 		
 		List<EVBBSystemResult> tmpResults = null;
+		
+		
+		stockQuoteService.getAllStockQuotesByCompanyId(3114L);
+		
 		// use EVBB System ot analyze 
 		List<EVBBSystemResult> satisfiedResults = new LinkedList<>();
 		for(CompanyModel company : companies) {
+//			if(company.getId() != 3114L) {
+//				continue;
+//			}
 			company.setQuoteList(stockQuoteService.getAllStockQuotesByCompanyId(company.getId()));
 			tmpResults = evbbSystem.analyzeAll(company);
 			
@@ -69,12 +56,6 @@ public class AnalyzerContext {
 				continue;
 			
 			satisfiedResults.addAll(tmpResults);
-			try {
-				printDebug(tmpResults);
-			} catch (PSException e) {
-				e.printStackTrace();
-			}
-			//logger.info(company.getSymbol() + ":" + tmpResults.size());
 		}
 		
 		// output
@@ -88,13 +69,11 @@ public class AnalyzerContext {
 		int lessNum = 0;
 		
 		for(EVBBSystemResult result : satisfiedResults) {
-			if (result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate() < 20170101) {
-				continue;
-			}
+//			if (result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate() < 20170101) {
+//				continue;
+//			}
 			try {
-				RoicModel roic;
-				roic = evbbSystem.evaluateByTDD(result);
-				roicList.add(roic);
+				roicList.add(evbbSystem.evaluateByTDD(result));
 			} catch (PSException e) {
 				e.printStackTrace();
 			}
@@ -112,6 +91,7 @@ public class AnalyzerContext {
 		String gainStr = String.format("Gain - Total ROIC:%.2f%%, Probability:%.2f%%, ROIC / DAY: %.2f%%", gainRoicTotal, gainRoicCount / totalCount, gainRoicTotal / gainRoicDays);
 		String lossStr = String.format("Loss - Total ROIC:%.2f%%, Probability:%.2f%%, ROIC / DAY: %.2f%%", lossRoicTotal, lossRoicCount / totalCount, lossRoicTotal / lossRoicDays);
 		
+		logger.info("Satisfied result number: " + satisfiedResults.size());
 		logger.info(gainStr);
 		logger.info(lossStr);
 	}

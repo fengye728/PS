@@ -109,7 +109,7 @@ public class TAUtil {
 		}
 		
 		double maxHighPrice = 0;
-		for(int i = startIndex; i < startIndex + days; ++i) {
+		for(int i = startIndex; i <= targetIndex; ++i) {
 			if(quotes.get(i).getHigh() > maxHighPrice) {
 				maxHighPrice = quotes.get(i).getHigh();
 			}
