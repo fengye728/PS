@@ -9,7 +9,7 @@ import org.maple.profitsystem.constants.CommonConstants;
 
 public class CSVUtil {
 
-	public static boolean writeList2CSV(String filename, List<Object> list) {
+	public static boolean writeList2CSV(String filename, List<? extends Object> list) {
 		File file = new File(filename);
 		FileWriter fw = null;
 		try {

@@ -8,6 +8,32 @@ import org.maple.profitsystem.models.StockQuoteModel;
 
 public class TAUtil {
 	
+	public static int MaxSellVolumeByIndex(List<StockQuoteModel> quotes, int targetIndex, int period) {
+		int startIndex = getBeforePeriodIndex(targetIndex, period);
+		int maxVolume = 0;
+		for(int i = startIndex; i <= targetIndex; ++i) {
+			StockQuoteModel quote = quotes.get(i);
+			if(quote.getClose() > quote.getOpen()) {
+				continue;
+			}
+			if(quote.getVolume() > maxVolume) {
+				maxVolume = quote.getVolume();
+			}
+		}
+		return maxVolume;
+	}
+	
+	public static int MaxVolumeByIndex(List<StockQuoteModel> quotes, int targetIndex, int period) {
+		int startIndex = getBeforePeriodIndex(targetIndex, period);
+		int maxVolume = 0;
+		for(int i = startIndex; i <= targetIndex; ++i) {
+			if(quotes.get(i).getVolume() > maxVolume) {
+				maxVolume = quotes.get(i).getVolume();
+			}
+		}
+		return maxVolume;
+	}
+	
 	/**
 	 * Get the index before targetIndex [period] days.(Include targetIndex)
 	 * @param targetIndex

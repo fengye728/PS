@@ -111,6 +111,7 @@ public class EVBBSystem {
 		if(null == entryIndex) {
 			return null;
 		}
+		
 		double entryP = entryPoint(evbbResult);
 		System.out.println(String.format("Ent DT:%s, Ent Price:%.2f", evbbResult.getCompany().getQuoteList().get(entryIndex).getQuoteDate(), entryP));
 		
@@ -121,8 +122,6 @@ public class EVBBSystem {
 				TAUtil.EMAVolumeByIndex(company.getQuoteList(), evbbResult.getDayIndex() - 1, 50),
 				TAUtil.MaxResistanceVolumeByIndex(company.getQuoteList(), evbbResult.getDayIndex(), 50));
 		System.out.println(info);
-
-		
 		
 		
 		int exitIndex = Math.min(getExitDateIndexByTDD(evbbResult.getDayIndex(), evbbResult) + 1, evbbResult.getCompany().getQuoteList().size() - 1);
@@ -155,21 +154,19 @@ public class EVBBSystem {
 	public Integer getEntryDateIndex(EVBBSystemResult evbbResult) {
 		StockQuoteModel quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex());
 		
-		// TODO Any no trading  before 30 days
+		// TODO Any no trading before 30 days
 		if(hasNoTradingDayBefore(evbbResult.getCompany(), evbbResult.getDayIndex())) {
 			return null;
 		}
 		
 		// TODO FDO Filter
-		try {
-			if(TAUtil.FiveDayOscillator(evbbResult.getCompany().getQuoteList(), evbbResult.getDayIndex()) < 70) {
-				return null;
-			}
-		} catch (PSException e) {
-			e.printStackTrace();
-		}
-		
-		
+//		try {
+//			if(TAUtil.FiveDayOscillator(evbbResult.getCompany().getQuoteList(), evbbResult.getDayIndex()) < 70) {
+//				return null;
+//			}
+//		} catch (PSException e) {
+//			e.printStackTrace();
+//		}
 
 		double point = entryPoint(evbbResult);
 		
@@ -263,12 +260,10 @@ public class EVBBSystem {
 			// set base info
 			result.setCompany(company);
 			result.setDayIndex(quoteIndex);
-			
-			if(getEntryDateIndex(result) != null) {
-				return result;
-			}
+			return result;
+		} else {
+			return null;
 		}
-		return null;
 
 	}
 	

@@ -1,5 +1,6 @@
 package org.maple.profitsystem;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -9,10 +10,12 @@ import org.apache.log4j.Logger;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.models.RoicModel;
+import org.maple.profitsystem.models.StockQuoteModel;
 import org.maple.profitsystem.services.CompanyService;
 import org.maple.profitsystem.services.StockQuoteService;
 import org.maple.profitsystem.systems.EVBBSystem;
 import org.maple.profitsystem.systems.EVBBSystemResult;
+import org.maple.profitsystem.utils.CSVUtil;
 import org.maple.profitsystem.utils.TAUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -49,6 +52,10 @@ public class AnalyzerContext {
 //			if(company.getId() != 3114L) {
 //				continue;
 //			}
+			// DO NOT PROCESS Health Care sector
+			if("Health Care".compareTo(company.getSector()) == 0) {
+				continue;
+			}
 			company.setQuoteList(stockQuoteService.getAllStockQuotesByCompanyId(company.getId()));
 			tmpResults = evbbSystem.analyzeAll(company);
 			
@@ -65,19 +72,43 @@ public class AnalyzerContext {
 		
 		List<RoicModel> roicList = new LinkedList<>();
 
-		int bigNum = 0;
-		int lessNum = 0;
-		
+		List<String> csvFile = new ArrayList<>();
 		for(EVBBSystemResult result : satisfiedResults) {
 //			if (result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate() < 20170101) {
 //				continue;
 //			}
 			try {
-				roicList.add(evbbSystem.evaluateByTDD(result));
+				RoicModel roic = evbbSystem.evaluateByTDD(result);
+				if(null == roic) {
+					continue;
+				}
+				roicList.add(roic);
+				
+				// output csv for python analyze
+				List<StockQuoteModel> quoteList = result.getCompany().getQuoteList();
+				double rateBeforeVol = (double)quoteList.get(result.getDayIndex()).getVolume() / TAUtil.MaxVolumeByIndex(quoteList, result.getDayIndex() - 1, 50);
+				double isTDD = TAUtil.ThreeDayDifference(quoteList, result.getDayIndex());
+				double rateEMAVol = (double)quoteList.get(result.getDayIndex()).getVolume() / TAUtil.EMAVolumeByIndex(quoteList, result.getDayIndex() - 1, 50);
+				
+				double rateSellVol;
+				if(TAUtil.MaxSellVolumeByIndex(quoteList, roic.getDays() + result.getDayIndex(), roic.getDays()) <= 0) {
+					rateSellVol = 0;
+				} else {
+					rateSellVol = (double)quoteList.get(result.getDayIndex()).getVolume() / TAUtil.MaxSellVolumeByIndex(quoteList, roic.getDays() + result.getDayIndex(), roic.getDays()); 
+				}
+				
+				String item = rateBeforeVol + ","
+						+ isTDD + ","
+						+ rateEMAVol + ","
+						+ rateSellVol + ","
+						+ roic.getRoic();
+				csvFile.add(item);
 			} catch (PSException e) {
 				e.printStackTrace();
 			}
 		}
+		CSVUtil.writeList2CSV("output", csvFile);
+		
 		double totalCount = roicList.size();
 		
 		long gainRoicCount = roicList.stream().filter( roic -> roic.getRoic() >= 0).count();
@@ -102,4 +133,5 @@ public class AnalyzerContext {
 	private void postLoadData() {
 		companies = companyService.getAllCompaniesWithStatistics();
 	}
+	
 }

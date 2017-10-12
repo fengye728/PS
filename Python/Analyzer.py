@@ -1,38 +1,65 @@
-import psycopg2 as db
+from db_operation import DBService
+from datetime import datetime
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
-SELECT_ALL_COMPANIES_SQL = 'SELECT * \
-    FROM company com'
+DATE_FORMAT = '%Y%m%d'
 
-SELECT_COMPANY_WITH_STATISTICS_SQL = 'SELECT com.id, com.symbol, com.name, com.sector, com.last_quote_dt, st.insider_own_perc, st.inst_own_perc, st.shs_outstand, st.shs_float \
-    FROM company com JOIN company_statistics st ON com.id = st.company_id'
+dao = DBService('ps', 'postgres', '123456', 'localhost', '5432')
 
-def connect_db():
-    return db.connect(database = "ps", user="postgres", password="123456", host="localhost", port = "5432")
+dao.connect()
 
-def close_db(conn):
-    conn.close()
+
+lines = dao.get_quotes_by_symbol('SNAP')
+
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
+plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+
+def JL_Trend(quotes):
+
+    RATE_TREND = 0.06
+    # 0: consolidation, 1: up, 2: down
+    trend = 0
+
+    closeSeries = quotes['close']
+
+    dates = []
+    prices = []
+
+    rateAcc = 0
+    for i in range(1, closeSeries.size):
+        rate = closeSeries[i] / closeSeries[i - 1] - 1
+        
+        if trend == 1:
+            if rate > 0:
+                rateAcc = 0
+                date = datetime.strptime(str(lines['quote_date'][i]), DATE_FORMAT).date()
+                dates.append(date)
+                prices.append(2)
+                continue
+        elif trend == 2:
+            if rate < 0:
+                rateAcc = 0
+                date = datetime.strptime(str(lines['quote_date'][i]), DATE_FORMAT).date()
+                dates.append(date)
+                prices.append(1)
+                continue
+
+        rateAcc += rate
+        
+        if rateAcc >= RATE_TREND:
+            trend = 1
+            date = datetime.strptime(str(lines['quote_date'][i]), DATE_FORMAT).date()
+            dates.append(date)
+            prices.append(2)
+        elif rateAcc <= -RATE_TREND:
+            trend = 2
+            date = datetime.strptime(str(lines['quote_date'][i]), DATE_FORMAT).date()
+            dates.append(date)
+            prices.append(1)            
+
+    print(dates)
+    plt.plot(dates, prices)
+    plt.show()    
     
-
-def get_companies(cursor):
-    cursor.execute(SELECT_ALL_COMPANIES_SQL)
-    return cursor.fetchall()
-    
-    
-
-
-
-
-
-cursor = conn.cursor()
-
-cursor.execute(SELECT_COMPANY_WITH_STATISTICS_SQL)
-
-rows = cursor.fetchall()
-
-for row in rows:
-    print(row)
-
-
-
-# close db
-db.close()
+JL_Trend(lines[:30])
