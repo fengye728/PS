@@ -171,9 +171,14 @@ public class CompanyModel {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Long id) { 
         this.id = id;
         this.statistics.setCompanyId(id);
+        if(this.quoteList != null) {
+        	for(StockQuoteModel quote : this.quoteList) {
+        		quote.setCompanyId(id);
+        	}
+        }
     }
 
     /**
