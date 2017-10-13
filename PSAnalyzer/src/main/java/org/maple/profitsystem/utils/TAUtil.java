@@ -126,8 +126,12 @@ public class TAUtil {
 	 * @param targetIndex
 	 * @param days
 	 * @return
+	 * @throws PSException 
 	 */
-	public static double MaxHighPriceByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) {
+	public static double MaxHighPriceByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) throws PSException {
+		if(days <= 0) {
+			throw new PSException("Period is zero or negative!");
+		}
 		int startIndex = targetIndex - days + 1;
 		if(startIndex < 0) {
 			startIndex = 0;
@@ -150,8 +154,12 @@ public class TAUtil {
 	 * @param targetIndex
 	 * @param days
 	 * @return
+	 * @throws PSException 
 	 */
-	public static double LowestPriceByIndex(List<StockQuoteModel> quotes, int targetIndex, int period) {
+	public static double LowestPriceByIndex(List<StockQuoteModel> quotes, int targetIndex, int period) throws PSException {
+		if(period <= 0) {
+			throw new PSException("Period is zero or egative!");
+		}
 		int startIndex = getBeforePeriodIndex(targetIndex, period);
 		
 		double lowestPrice = Double.MAX_VALUE;

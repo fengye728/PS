@@ -78,7 +78,7 @@ public class EVBBSystem {
 				maxHigh = quoteList.get(i).getHigh();
 			}
 		}
-		double base = entryPoint(evbbResult);
+		double base = entryPrice(evbbResult);
 		return (maxHigh - base) * 100 / base;
 	}
 	
@@ -96,7 +96,7 @@ public class EVBBSystem {
 		if(i <= evbbResult.getDayIndex()) {
 			return null;
 		}
-		double entryP = entryPoint(evbbResult);
+		double entryP = entryPrice(evbbResult);
 		return (quotes.get(i).getOpen() - entryP) / entryP;
 	}
 	
@@ -112,7 +112,7 @@ public class EVBBSystem {
 			return null;
 		}
 		
-		double entryP = entryPoint(evbbResult);
+		double entryP = entryPrice(evbbResult);
 		System.out.println(String.format("Ent DT:%s, Ent Price:%.2f", evbbResult.getCompany().getQuoteList().get(entryIndex).getQuoteDate(), entryP));
 		
 		// TODO For debug
@@ -134,7 +134,7 @@ public class EVBBSystem {
 		result.setSector(evbbResult.getCompany().getSector());
 		result.setRoic(roic);
 		result.setDays(exitIndex - entryIndex);
-		result.setEntryDate(evbbResult.getCompany().getQuoteList().get(entryIndex).getQuoteDate());
+		result.setEntryIndex(entryIndex);
 		System.out.println("ROIC: " + roic);
 		System.out.println(String.format("Exit DT:%s, Exit Price:%.2f", evbbResult.getCompany().getQuoteList().get(exitIndex).getQuoteDate(), exitP));
 		double maxPrice = TAUtil.MaxHighPriceByIndex(evbbResult.getCompany().getQuoteList(), exitIndex, exitIndex - entryIndex);
@@ -168,7 +168,7 @@ public class EVBBSystem {
 //			e.printStackTrace();
 //		}
 
-		double point = entryPoint(evbbResult);
+		double point = entryPrice(evbbResult);
 		
 		int leftDays = Math.min(ENTRY_WAIT_DAYS_AFTER_SPIKE, evbbResult.getCompany().getQuoteList().size() - evbbResult.getDayIndex() - 1);
 		for(int i = 1; i <= leftDays; ++i) {
@@ -181,11 +181,11 @@ public class EVBBSystem {
 	}
 	
 	/**
-	 * Get the limit price of entry point.
+	 * Get the limit price of entry price.
 	 * @param evbbResult
 	 * @return
 	 */
-	public double entryPoint(EVBBSystemResult evbbResult) {
+	public double entryPrice(EVBBSystemResult evbbResult) {
 		StockQuoteModel quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex());
 		return (quote.getHigh() + quote.getLow()) / 2;
 	}
@@ -336,9 +336,13 @@ public class EVBBSystem {
 		}
 		
 		List<StockQuoteModel> quotes = company.getQuoteList();
-		if(quotes.get(targetIndex).getClose() > TAUtil.MaxHighPriceByIndex(quotes, targetIndex - 1, DAYS_OF_MAX_HIGH_PRICE)) {
-			return true;
-		} else {
+		try {
+			if(quotes.get(targetIndex).getClose() > TAUtil.MaxHighPriceByIndex(quotes, targetIndex - 1, DAYS_OF_MAX_HIGH_PRICE)) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (PSException e) {
 			return false;
 		}
 	}
@@ -430,7 +434,8 @@ public class EVBBSystem {
 		try {
 			double ema = TAUtil.EMAVolumeByIndex(quotes, targetIndex - 1, EMA_SMA_DAYS);
 			double sma = TAUtil.SMAVolumeByIndex(quotes, targetIndex - 1, EMA_SMA_DAYS);
-			if(sma < ema && ema < sma *  SMA_TIMES) {
+			//if(sma < ema && ema < sma *  SMA_TIMES) {
+			if(ema < sma *  SMA_TIMES) {
 				return true;
 			} else {
 				return false;

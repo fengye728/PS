@@ -64,7 +64,6 @@ public class CollectorContext {
 			companyInfoCollector.updateListCompanyQuotes();
 			storeListCompanyFullInfoToDisk();
 		}
-		
 	}
 	
 	@Scheduled(cron = "${schedule.cron.companies}", zone = "${schedule.timezone}")

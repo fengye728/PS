@@ -1,6 +1,6 @@
 import csv
 import numpy as np
-from sklearn.cross_validation import KFold  
+from sklearn.cross_validation import KFold
 from sklearn.linear_model import LogisticRegression  
 from sklearn.naive_bayes import GaussianNB  
 from sklearn.neighbors import KNeighborsClassifier   
@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 
 FILE_NAME_INPUT = r'E:\DevCodes\ProfitSystem\PSAnalyzer\output'
 
+MARK_STR = ['or', 'og', 'ob', 'ok', '^r', '+r', 'sr', 'dr', '<r', 'pr']
+
 
 def load_csv_data(filename):
     data = []
@@ -24,6 +26,7 @@ def load_csv_data(filename):
     data = np.array(data)
     labels = np.array(labels)
 
+    print('Count of records:', len(data))
     return data,labels
 
 def accuracy(test_labels, pred_labels):
@@ -33,7 +36,7 @@ def accuracy(test_labels, pred_labels):
 
 #------ Common Classify -------
 def testClassify(features, labels, clf):
-    kf = KFold(len(features), n_folds = 3, shuffle = True)
+    kf = KFold(len(features), n_folds = 4, shuffle = True)
     result_set = [(clf.fit(features[train], labels[train]).predict(features[test]), test) for train, test in kf]    
     score = [accuracy(labels[result[1]], result[0]) for result in result_set]    
     print(score)  
@@ -48,7 +51,7 @@ def testLR(features, labels):
 #-------------------------
 #-- naive bayes
 #-------------------------
-def testNaiveBayes(features, labels):
+def testGaussianNB(features, labels):
     clf = GaussianNB() 
     testClassify(features, labels, clf)
 
@@ -81,12 +84,16 @@ def testRandomForest(features, labels):
     testClassify(features, labels, clf)
 
 features, labels = load_csv_data(FILE_NAME_INPUT)
+data_set = features[:, 4]
+data_set = np.column_stack((data_set, features[:, 5]))
 
+features = data_set
+'''
 print('LogisticRegression: \r')  
 testLR(features, labels)  
       
 print('GaussianNB: \r')  
-testNaiveBayes(features, labels)  
+testGaussianNB(features, labels)  
       
 print('KNN: \r')  
 testKNN(features, labels)  
@@ -98,8 +105,15 @@ print('Decision Tree: \r')
 testDecisionTree(features, labels)  
       
 print('Random Forest: \r')  
-testRandomForest(features, labels)  
+testRandomForest(features, labels)
+'''
 
+
+
+for i in range(len(data_set)):
+    plt.plot(data_set[i][0], data_set[i][1], MARK_STR[labels[i]])
+
+plt.show()
 '''
 print('Step 1: Loading data...')
 data_set = []
@@ -108,7 +122,7 @@ for item in csv.reader(open(FILE_NAME_INPUT)):
 
 numSamples = len(data_set)
 
-MARK_STR = ['or', 'ob', 'og', 'ok', '^r', '+r', 'sr', 'dr', '<r', 'pr']
+
 
 numZero = 0
 numNeg = 0
