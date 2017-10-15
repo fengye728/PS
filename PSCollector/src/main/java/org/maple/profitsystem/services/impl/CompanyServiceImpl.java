@@ -189,15 +189,24 @@ public class CompanyServiceImpl implements CompanyService {
 		if(null == record) {
 			return 0;
 		}
-		List<StockQuoteModel> quotes = record.getQuoteList();
-		int count = stockQuoteService.addStockQuoteList(quotes);
+		List<StockQuoteModel> originQuotes = record.getQuoteList();
+		List<StockQuoteModel> newQuotes = new ArrayList<>();
+		// filter the quotes need to update
+		for(StockQuoteModel quote : originQuotes) {
+			if(quote.getQuoteDate() > record.getLastQuoteDt()) {
+				newQuotes.add(quote);
+			} else {
+				break;
+			}
+		}
+		int count = stockQuoteService.addStockQuoteList(newQuotes);
 		if(count == 0) {
-			// update fail, set last quote dt to previous
+			// update fail, no need to update quote date
 			return 0;
 		} else {
 			record.setLastUpdateDt(new Date());
 			// set last quote date
-			record.setLastQuoteDt(quotes.get(quotes.size() - 1).getQuoteDate());
+			record.setLastQuoteDt(newQuotes.get(0).getQuoteDate());
 			return this.updateCompany(record);
 		}
 	}

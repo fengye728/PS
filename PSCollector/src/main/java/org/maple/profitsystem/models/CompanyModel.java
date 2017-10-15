@@ -236,14 +236,8 @@ public class CompanyModel {
 	public void setQuoteList(List<StockQuoteModel> quoteList) {
 		if(null != quoteList && !quoteList.isEmpty()) {
 			Collections.sort(quoteList);
-
-			int i = 0;
-			for(; i < quoteList.size(); ++i) {
-				if(quoteList.get(i).getQuoteDate() <= this.lastQuoteDt) {
-					break;
-				}
-			}
-			this.quoteList = quoteList.subList(0, i);
+			
+			this.quoteList = quoteList;
 			
 			for(StockQuoteModel quote : this.quoteList) {
 				quote.setCompanyId(this.id);

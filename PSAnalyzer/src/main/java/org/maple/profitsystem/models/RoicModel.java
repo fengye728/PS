@@ -10,14 +10,14 @@ public class RoicModel {
 	
 	private int days;
 	
-	private int entryDate;
+	private int entryIndex;
 	
 	public String toString() {
 		return symbol + "," + 
 				sector + "," + 
 				roic + "," + 
 				days + "," + 
-				entryDate;
+				entryIndex;
 	}
 
 	public String getSymbol() {
@@ -52,12 +52,12 @@ public class RoicModel {
 		this.days = days;
 	}
 
-	public int getEntryDate() {
-		return entryDate;
+	public int getEntryIndex() {
+		return entryIndex;
 	}
 
-	public void setEntryDate(int entryDate) {
-		this.entryDate = entryDate;
+	public void setEntryIndex(int entryIndex) {
+		this.entryIndex = entryIndex;
 	}
 	
 }

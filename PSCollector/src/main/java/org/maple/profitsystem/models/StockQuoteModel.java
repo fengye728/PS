@@ -8,11 +8,11 @@ import org.maple.profitsystem.utils.TradingDateUtil;
 public class StockQuoteModel implements Comparable<StockQuoteModel>{
 	
 	/**
-	 * Sort by date ascending order
+	 * Sort by date desc order
 	 */
 	@Override
 	public int compareTo(StockQuoteModel o) {
-		return -TradingDateUtil.betweenTradingDays(TradingDateUtil.convertNumDate2Date(this.getQuoteDate()), 
+		return TradingDateUtil.betweenTradingDays(TradingDateUtil.convertNumDate2Date(this.getQuoteDate()), 
 				TradingDateUtil.convertNumDate2Date(o.getQuoteDate()));
 	}
 	
