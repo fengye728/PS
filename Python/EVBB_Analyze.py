@@ -18,16 +18,13 @@ MARK_STR = ['or', 'og', 'ob', 'ok', '^r', '+r', 'sr', 'dr', '<r', 'pr']
 
 def load_csv_data(filename):
     data = []
-    labels = []
     for item in csv.reader(open(FILE_NAME_INPUT)):
-        data.append([float(field) for field in item[:-1]])
-        labels.append(int(float(item[-1]) > 0))
+        data.append([float(field) for field in item])
 
     data = np.array(data)
-    labels = np.array(labels)
 
     print('Count of records:', len(data))
-    return data,labels
+    return data
 
 def accuracy(test_labels, pred_labels):
     correct = np.sum(test_labels == pred_labels)
@@ -36,10 +33,10 @@ def accuracy(test_labels, pred_labels):
 
 #------ Common Classify -------
 def testClassify(features, labels, clf):
-    kf = KFold(len(features), n_folds = 4, shuffle = True)
+    kf = KFold(len(features), n_folds = 3, shuffle = True)
     result_set = [(clf.fit(features[train], labels[train]).predict(features[test]), test) for train, test in kf]    
     score = [accuracy(labels[result[1]], result[0]) for result in result_set]    
-    print(score)  
+    print(score, np.mean(score))  
 
 #-------------------------
 #-- Logistic Regression
@@ -83,12 +80,31 @@ def testRandomForest(features, labels):
     clf = RandomForestClassifier()  
     testClassify(features, labels, clf)
 
-features, labels = load_csv_data(FILE_NAME_INPUT)
-data_set = features[:, 4]
-data_set = np.column_stack((data_set, features[:, 5]))
 
-features = data_set
-'''
+#--------------------------------------
+#---- LOSS more than -5
+#--------------------------------------
+def constructLossData(features):
+    labels = np.array([int(roic > 5) for roic in features[:, [6]]])
+    features = features[:, [1]]
+    
+    return features, labels
+
+orign_features= load_csv_data(FILE_NAME_INPUT)
+
+features, labels = constructLossData(orign_features)
+
+count = 0.0
+num = 0
+for i in range(len(labels)):
+    if labels[i] == 1:
+        count += orign_features[i][5]
+        num += 1
+
+print('Mean return:', count / num, 'of', num)
+
+
+
 print('LogisticRegression: \r')  
 testLR(features, labels)  
       
@@ -106,14 +122,17 @@ testDecisionTree(features, labels)
       
 print('Random Forest: \r')  
 testRandomForest(features, labels)
-'''
 
 
+data_set = orign_features[:, 4]
+data_set = np.column_stack((data_set, orign_features[:, [6]]))
 
 for i in range(len(data_set)):
     plt.plot(data_set[i][0], data_set[i][1], MARK_STR[labels[i]])
 
 plt.show()
+
+
 '''
 print('Step 1: Loading data...')
 data_set = []
