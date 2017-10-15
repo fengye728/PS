@@ -11,7 +11,7 @@ from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
 
 
-FILE_NAME_INPUT = r'E:\DevCodes\ProfitSystem\PSAnalyzer\output'
+FILE_NAME_INPUT = r'F:\Codes\spring-development\ProfitSystem\PSAnalyzer\output'
 
 MARK_STR = ['or', 'og', 'ob', 'ok', '^r', '+r', 'sr', 'dr', '<r', 'pr']
 
@@ -85,20 +85,45 @@ def testRandomForest(features, labels):
 #---- LOSS more than -5
 #--------------------------------------
 def constructLossData(features):
-    labels = np.array([int(roic > 5) for roic in features[:, [6]]])
-    features = features[:, [1]]
-    
+    labels = np.array([int(roic[6] > 5) for roic in features])
+    features = features[:, 0:4]
+
     return features, labels
+
+def contructFailData(features):
+    return list(filter(lambda fields : fields[6] > -5, features))
 
 orign_features= load_csv_data(FILE_NAME_INPUT)
 
 features, labels = constructLossData(orign_features)
 
+'''
+tarin_features = np.array(list(filter(lambda fields : fields[6] > 0 and fields[6] < 10, orign_features)))
+test_features = np.array(list(filter(lambda fields : fields[6] <= 0 or fields[6] >= 10, orign_features)))
+'''
+
+tarin_features = orign_features[:200, :]
+test_features = orign_features[200: , :]
+
+
+
+tarin_features, train_lables = constructLossData(tarin_features)
+test_features, test_lables = constructLossData(test_features)
+
+
+clf = LogisticRegression()
+
+fiter = clf.fit(tarin_features, train_lables)
+
+result_set = (fiter.predict(test_features), range(len(test_features)))
+score = accuracy(test_lables[result_set[1]], result_set[0])
+print(score, np.mean(score)) 
+
 count = 0.0
 num = 0
 for i in range(len(labels)):
     if labels[i] == 1:
-        count += orign_features[i][5]
+        count += orign_features[i][6]
         num += 1
 
 print('Mean return:', count / num, 'of', num)
@@ -124,13 +149,13 @@ print('Random Forest: \r')
 testRandomForest(features, labels)
 
 
-data_set = orign_features[:, 4]
+data_set = orign_features[:, 0]
 data_set = np.column_stack((data_set, orign_features[:, [6]]))
 
 for i in range(len(data_set)):
     plt.plot(data_set[i][0], data_set[i][1], MARK_STR[labels[i]])
 
-plt.show()
+#plt.show()
 
 
 '''
