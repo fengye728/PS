@@ -54,7 +54,7 @@ public class EVBBSystemContext {
 			watchList.addAll(tmpResults);
 			
 			for(EVBBSystemResult result : tmpResults) {
-				logger.info(company.getSymbol() + " " + company.getQuoteList().get(result.getDayIndex()));
+				logger.info(company.getSymbol() + " " + company.getQuoteList().get(result.getDayIndex()).getQuoteDate());
 			}
 		}
 		logger.info("Got watchlist completely!");
@@ -125,7 +125,8 @@ public class EVBBSystemContext {
 						+ rateSellVol + ","
 						+ minRoic + ","
 						+ maxRoic + ","
-						+ roic.getRoic() * 100;
+						+ roic.getRoic() * 100 + ","
+						+ result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate();
 				csvFile.add(item);
 			} catch (PSException e) {
 				e.printStackTrace();
