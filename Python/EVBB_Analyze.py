@@ -6,12 +6,13 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier   
 from sklearn import svm  
 from sklearn.tree import DecisionTreeClassifier  
-from sklearn.ensemble import RandomForestClassifier 
+from sklearn.ensemble import RandomForestClassifier
+from itertools import combinations
 
 import matplotlib.pyplot as plt
 
 
-FILE_NAME_INPUT = r'F:\Codes\spring-development\ProfitSystem\PSAnalyzer\output'
+FILE_NAME_INPUT = r'E:\DevCodes\ProfitSystem\PSAnalyzer\output'
 
 MARK_STR = ['or', 'og', 'ob', 'ok', '^r', '+r', 'sr', 'dr', '<r', 'pr']
 
@@ -36,14 +37,16 @@ def testClassify(features, labels, clf):
     kf = KFold(len(features), n_folds = 3, shuffle = True)
     result_set = [(clf.fit(features[train], labels[train]).predict(features[test]), test) for train, test in kf]    
     score = [accuracy(labels[result[1]], result[0]) for result in result_set]    
-    print(score, np.mean(score))  
+
+    #print(score, np.mean(score))
+    return np.mean(score)
 
 #-------------------------
 #-- Logistic Regression
 #-------------------------
 def testLR(features, labels):
     clf = LogisticRegression() 
-    testClassify(features, labels, clf)
+    return testClassify(features, labels, clf)
 
 #-------------------------
 #-- naive bayes
@@ -84,27 +87,117 @@ def testRandomForest(features, labels):
 #--------------------------------------
 #---- LOSS more than -5
 #--------------------------------------
-def constructLossData(features):
-    labels = np.array([int(roic[6] > 5) for roic in features])
-    features = features[:, 0:4]
+def constructFeatures(features, columns):
+    return features[:, columns]
 
-    return features, labels
+def constructLabels(records, roic_th):
+    return np.array([int(roic[6] >= roic_th) for roic in records])
 
-def contructFailData(features):
-    return list(filter(lambda fields : fields[6] > -5, features))
+def featureColumns(size):
+    columns = range(size)
+    result_set = []
+    for num in range(1, size + 1):
+        result_set.extend(list(combinations(columns, num)))
+    return result_set
 
-orign_features= load_csv_data(FILE_NAME_INPUT)
+# load origin records type of list
+records = load_csv_data(FILE_NAME_INPUT)
 
-features, labels = constructLossData(orign_features)
+def best_evbb():
+    # classify loop times
+    LOOP_TIMES = 10000
+    
+
+    # The variance
+    feature_col_list = featureColumns(4)
+    roic_list = range(11)
+
+    # index: roic_th index, feature_col
+    # value: success probability
+    result_set = []
+    for roic_th in roic_list: 
+        row = []
+        #Construct labels
+        labels = constructLabels(records, roic_th)
+            
+        for feature_col in feature_col_list:
+            # Construct features
+            features = constructFeatures(records, feature_col)
+        
+            tmp_pro = []
+            for i in range(LOOP_TIMES):
+                tmp_pro.append(testLR(features, labels))
+            
+            row.append(np.mean(tmp_pro))
+
+        count = 0.0
+        num = 0
+        for i in range(len(labels)):
+            if labels[i] == 1:
+                count += records[i][6]
+                num += 1
+        max_pro = np.max(row)
+        pos = np.where(row == max_pro)[0][0]
+        print('Mean return:', count / num, 'of', num, 'in roic:', roic_th, '.Best pro:', np.max(row), feature_col_list[pos])
+        
+        result_set.append(row)
+
+    # find best
+    max_pro = np.max(result_set)
+    pos = np.where(result_set == max_pro)
+    print('Best setting:', max_pro)
+    print('Roic:', roic_list[pos[0][0]])
+    print('Columns:', feature_col_list[pos[1][0]])
+    
+
+def predict():
+
+    # The variance
+    feature_col = (0, 2, 3)
+    roic_list = range(2, 11)
+
+    # construct train and test records
+    train_records = np.array(list(filter(lambda record : int(record[-1]) < 20170000, records)))
+    test_records = np.array(list(filter(lambda record : int(record[-1]) > 20170000, records)))
+
+    print('Train records num:', len(train_records))
+    print('Test records num:', len(test_records))
+    
+    # index: roic_th index, feature_col
+    # value: success probability
+    for roic_th in roic_list: 
+        #Construct labels
+        train_features = constructFeatures(train_records, feature_col)
+        train_labels = constructLabels(train_records, roic_th)
+
+        # Train LR Classify
+        clf = LogisticRegression()
+        fiter = clf.fit(train_features, train_labels)
+
+        # Test
+        test_features = constructFeatures(test_records, feature_col)
+        test_labels = constructLabels(test_records, roic_th)
+        
+        result_set = (fiter.predict(test_features), range(len(test_features)))
+        score = accuracy(test_labels[result_set[1]], result_set[0])
+        print('Satisified count:',np.sum(test_labels == 1))
+        print('Roic:', roic_th, 'Probability:', score)
+        print()
+
+
+predict()
+
 
 '''
 tarin_features = np.array(list(filter(lambda fields : fields[6] > 0 and fields[6] < 10, orign_features)))
 test_features = np.array(list(filter(lambda fields : fields[6] <= 0 or fields[6] >= 10, orign_features)))
 '''
 
-tarin_features = orign_features[:200, :]
-test_features = orign_features[200: , :]
+'''
+tarin_features = orign_features[:-10]
+test_features = orign_features[-10:]
 
+#test_features = np.array([test_features])
 
 
 tarin_features, train_lables = constructLossData(tarin_features)
@@ -118,15 +211,6 @@ fiter = clf.fit(tarin_features, train_lables)
 result_set = (fiter.predict(test_features), range(len(test_features)))
 score = accuracy(test_lables[result_set[1]], result_set[0])
 print(score, np.mean(score)) 
-
-count = 0.0
-num = 0
-for i in range(len(labels)):
-    if labels[i] == 1:
-        count += orign_features[i][6]
-        num += 1
-
-print('Mean return:', count / num, 'of', num)
 
 
 
@@ -156,68 +240,4 @@ for i in range(len(data_set)):
     plt.plot(data_set[i][0], data_set[i][1], MARK_STR[labels[i]])
 
 #plt.show()
-
-
-'''
-print('Step 1: Loading data...')
-data_set = []
-for item in csv.reader(open(FILE_NAME_INPUT)):
-    data_set.append([float(item[1]), float(item[4]) * 100])
-
-numSamples = len(data_set)
-
-
-
-numZero = 0
-numNeg = 0
-numTen = 0
-numTwf = 0
-for i in range(numSamples):
-    if(data_set[i][1] >= 20):
-        mark = MARK_STR[0]
-        numTwf += 1
-    elif(data_set[i][1] >= 10):
-        mark = MARK_STR[1]
-        numTen += 1
-    elif(data_set[i][1] >= 0):
-        mark = MARK_STR[2]
-        numZero += 1
-    else:
-        mark = MARK_STR[3]
-        numNeg += 1        
-    
-    plt.plot(data_set[i][0], data_set[i][1], mark)
-
-print('Count of 20%:', numTwf)
-print('Count of 10%:', numTen)
-print('Count Postive:', numTwf + numZero + numTen)
-print('Count Negative:', numNeg)
-
-plt.show()
-'''
-
-
-'''
-for k in range(1, 2):
-    clf = KMeans(n_clusters = k)
-    s = clf.fit(data_set)
-    
-    numSamples = len(data_set)
-    centroids = clf.labels_
-
-    print(centroids, type(centroids))
-    print(clf.inertia_)
-    
-    
-    #画出所有样例点 属于同一分类的绘制同样的颜色
-    for i in range(numSamples):
-        #markIndex = int(clusterAssment[i, 0])
-        plt.plot(data_set[i][0], data_set[i][1], MARK_STR[clf.labels_[i]]) #mark[markIndex])
-        mark = ['Dr', 'Db', 'Dg', 'Dk', '^b', '+b', 'sb', 'db', '<b', 'pb']
-        # 画出质点，用特殊图型
-        centroids =  clf.cluster_centers_
-        for i in range(k):
-            plt.plot(centroids[i][0], centroids[i][1], mark[i], markersize = 12)
-            #print centroids[i, 0], centroids[i, 1]
-    plt.show()
 '''
