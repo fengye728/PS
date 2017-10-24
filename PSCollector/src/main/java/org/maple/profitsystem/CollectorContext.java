@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class CollectorContext {
 	
+	static final String ARG_UPDATE_NOW = "-n";
+	
 	private static Logger logger = Logger.getLogger(CollectorContext.class);
 	
 	@Autowired
@@ -50,7 +52,7 @@ public class CollectorContext {
 		TimeZone.setDefault(TimeZone.getTimeZone("America/New_York"));
 	}
 	
-	public void run() {
+	public void run(String[] args) {
 		init();
 		
 		// load data from db first
@@ -58,11 +60,25 @@ public class CollectorContext {
 			// no data in db
 			// then load data from disk
 			loadListCompanyFullInfoFromDisk();
+		}
+		
+		// check args
+		if(args.length == 1 && args[0].equals(ARG_UPDATE_NOW)) {
+			
 			// update and store all in first time
-			companyInfoCollector.addListNewCompaniesBaseInfo();
-			companyInfoCollector.updateListCompanyStatistics();
-			companyInfoCollector.updateListCompanyQuotes();
-			storeListCompanyFullInfoToDisk();
+			if(companyList.size() == 0) {
+				companyInfoCollector.addListNewCompaniesBaseInfo();
+				companyInfoCollector.updateListCompanyStatistics();
+				companyInfoCollector.updateListCompanyQuotes();
+			} else {
+				// update quotes first
+				companyInfoCollector.updateListCompanyQuotes();
+				
+				companyInfoCollector.addListNewCompaniesBaseInfo();
+				companyInfoCollector.updateListCompanyStatistics();
+			}
+			
+			
 		}
 	}
 	

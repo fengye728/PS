@@ -36,9 +36,18 @@ public class AnalyzerContext {
 		evbbContext.train(companies);
 	}
 	
-	public void setCompanyQuotes(CompanyModel company) {
+	public void loadCompanyQuotes(CompanyModel company) {
 		if(company != null && company.getQuoteList().size() == 0)
 			company.setQuoteList(stockQuoteService.getAllStockQuotesByCompanyId(company.getId()));
+	}
+	
+	public CompanyModel getCompanyBySymbol(String symbol) {
+		for(CompanyModel company : companies){
+			if(company.getSymbol().equals(symbol)) {
+				return company;
+			}
+		}
+		return null;
 	}
 	
 	/**

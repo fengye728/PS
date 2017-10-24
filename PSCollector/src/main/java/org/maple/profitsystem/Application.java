@@ -31,7 +31,7 @@ public class Application{
 		
 		logger.info("Startup PS Collector");
 		
-		context.run();
+		context.run(args);
 		
 		logger.info("Startup schduled tasks...");
 	}

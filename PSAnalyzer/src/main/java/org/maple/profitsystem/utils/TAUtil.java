@@ -68,6 +68,17 @@ public class TAUtil {
 		return (int)(amountVolume / days);
 	}
 	
+	public static int SMAPriceByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) throws PSException {
+		int startIndex = targetIndex - days + 1;
+		if(startIndex < 0) {
+			throw new PSException("No enough records for SMAPriceByIndex");
+		}
+		long amountVolume = 0;
+		for(int i = startIndex; i <= targetIndex; ++i) {
+			amountVolume += quotes.get(i).getClose();
+		}
+		return (int)(amountVolume / days);
+	}
 	/**
 	 * EMA of Volume.(Include targetIndex)
 	 * @param quotes
@@ -82,11 +93,24 @@ public class TAUtil {
 			throw new PSException("No enough records for EMAVolumeByIndex");
 		}
 		
-		int emaLast = quotes.get(startIndex).getVolume();
+		int emaLast = TAUtil.SMAVolumeByIndex(quotes, startIndex, days);
 		
-		for(int i = startIndex + 1; i < startIndex + days; ++i) {
-			int n = i - startIndex + 1;
-			emaLast = (2 * quotes.get(i).getVolume() + (n - 1) * emaLast) / (n + 1);
+		for(int i = startIndex + 1; i <= targetIndex; ++i) {
+			emaLast = (2 * quotes.get(i).getVolume() + (days - 1) * emaLast) / (days + 1);
+		}
+		return emaLast;
+	}
+	
+	public static double EMAPriceByIndex(List<StockQuoteModel> quotes, int targetIndex, int days) throws PSException {
+		int startIndex = targetIndex - days + 1;
+		if(startIndex < 0) {
+			throw new PSException("No enough records for EMAPriceByIndex");
+		}
+		
+		double emaLast = TAUtil.SMAPriceByIndex(quotes, startIndex, days);
+		
+		for(int i = startIndex + 1; i <= targetIndex; ++i) {
+			emaLast = (2 * quotes.get(i).getClose() + (days - 1) * emaLast) / (days + 1);
 		}
 		return emaLast;
 	}

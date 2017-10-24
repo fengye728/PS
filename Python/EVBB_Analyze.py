@@ -28,13 +28,21 @@ def load_csv_data(filename):
     return data
 
 def accuracy(test_labels, pred_labels):
-    correct = np.sum(test_labels == pred_labels)
-    n = len(test_labels)
+    new_tab = np.column_stack((test_labels, pred_labels))
+
+    #n = np.sum(new_tab[:, 0] == 1) # 应入场次数
+    n = np.sum(new_tab[:, 1] == 1)  # 入场次数
+    
+    correct = len(list(filter(lambda x : x[0] == x[1] and x[0] == 1, new_tab)))
+
+    if n == 0 or correct == 0:
+        return 0
+    
     return float(correct) / n
 
 #------ Common Classify -------
 def testClassify(features, labels, clf):
-    kf = KFold(len(features), n_folds = 3, shuffle = True)
+    kf = KFold(len(features), n_folds = 2, shuffle = True)
     result_set = [(clf.fit(features[train], labels[train]).predict(features[test]), test) for train, test in kf]    
     score = [accuracy(labels[result[1]], result[0]) for result in result_set]    
 
@@ -53,7 +61,7 @@ def testLR(features, labels):
 #-------------------------
 def testGaussianNB(features, labels):
     clf = GaussianNB() 
-    testClassify(features, labels, clf)
+    return testClassify(features, labels, clf)
 
 #------------------------------------------------------------------------------  
 #K最近邻  
@@ -67,21 +75,21 @@ def testKNN(features, labels):
 #-------------------------
 def testSVM(features, labels):
     clf = svm.SVC()
-    testClassify(features, labels, clf)
+    return testClassify(features, labels, clf)
     
 #------------------------------------------------------------------------------  
 #--- 决策树  
 #------------------------------------------------------------------------------  
 def testDecisionTree(features, labels):   
     clf = DecisionTreeClassifier()  
-    testClassify(features, labels, clf)
+    return testClassify(features, labels, clf)
 
 #------------------------------------------------------------------------------  
 #--- 随机森林  
 #------------------------------------------------------------------------------  
 def testRandomForest(features, labels):  
     clf = RandomForestClassifier()  
-    testClassify(features, labels, clf)
+    return testClassify(features, labels, clf)
 
 
 #--------------------------------------
@@ -92,6 +100,9 @@ def constructFeatures(features, columns):
 
 def constructLabels(records, roic_th):
     return np.array([int(roic[6] >= roic_th) for roic in records])
+
+def constructHighLowLabels(records, gain_roic_th, loss_roic_th):
+    return np.array([ int(roic[4] > loss_roic_th and roic[5]>= gain_roic_th) for roic in records])
 
 def featureColumns(size):
     columns = range(size)
@@ -105,12 +116,12 @@ records = load_csv_data(FILE_NAME_INPUT)
 
 def best_evbb():
     # classify loop times
-    LOOP_TIMES = 10000
+    LOOP_TIMES = 1000
     
 
     # The variance
-    feature_col_list = featureColumns(4)
-    roic_list = range(11)
+    feature_col_list = featureColumns(3)
+    roic_list = range(0, 11)
 
     # index: roic_th index, feature_col
     # value: success probability
@@ -126,7 +137,7 @@ def best_evbb():
         
             tmp_pro = []
             for i in range(LOOP_TIMES):
-                tmp_pro.append(testLR(features, labels))
+                tmp_pro.append(testSVM(features, labels))
             
             row.append(np.mean(tmp_pro))
 
@@ -138,23 +149,29 @@ def best_evbb():
                 num += 1
         max_pro = np.max(row)
         pos = np.where(row == max_pro)[0][0]
-        print('Mean return:', count / num, 'of', num, 'in roic:', roic_th, '.Best pro:', np.max(row), feature_col_list[pos])
+        print('Mean return:', count / num, 'of', num, 'in roic:', roic_th, '.Best pro:', np.max(row), 'Difference:', np.max(row) - np.min(row),feature_col_list[pos])
         
         result_set.append(row)
 
     # find best
     max_pro = np.max(result_set)
     pos = np.where(result_set == max_pro)
+    print()
     print('Best setting:', max_pro)
     print('Roic:', roic_list[pos[0][0]])
     print('Columns:', feature_col_list[pos[1][0]])
-    
+
+
+def get_profit(high, low):
+    return high - low
 
 def predict():
 
     # The variance
-    feature_col = (0, 2, 3)
-    roic_list = range(2, 11)
+    feature_col = (0, 1, 2, 3)
+    stop_roic_list = range(-10, 0)
+    gain_roic_list = range(5, 20)
+    
 
     # construct train and test records
     train_records = np.array(list(filter(lambda record : int(record[-1]) < 20170000, records)))
@@ -162,82 +179,59 @@ def predict():
 
     print('Train records num:', len(train_records))
     print('Test records num:', len(test_records))
-    
+    print()
+
+    total_list = []
     # index: roic_th index, feature_col
     # value: success probability
-    for roic_th in roic_list: 
-        #Construct labels
-        train_features = constructFeatures(train_records, feature_col)
-        train_labels = constructLabels(train_records, roic_th)
+    for loss_th in stop_roic_list:
 
-        # Train LR Classify
-        clf = LogisticRegression()
-        fiter = clf.fit(train_features, train_labels)
-
-        # Test
-        test_features = constructFeatures(test_records, feature_col)
-        test_labels = constructLabels(test_records, roic_th)
+        for gain_th in gain_roic_list:
         
-        result_set = (fiter.predict(test_features), range(len(test_features)))
-        score = accuracy(test_labels[result_set[1]], result_set[0])
-        print('Satisified count:',np.sum(test_labels == 1))
-        print('Roic:', roic_th, 'Probability:', score)
-        print()
+            #Construct labels
+            train_features = constructFeatures(train_records, feature_col)
+            train_labels = constructHighLowLabels(train_records, gain_th, loss_th)
+
+            # Train Classify
+            clf = GaussianNB()
+            fiter = clf.fit(train_features, train_labels)
+
+            # Test
+            test_features = constructFeatures(test_records, feature_col)
+            test_labels = constructHighLowLabels(test_records, gain_th, loss_th)
+        
+            result_set = fiter.predict(test_features)
+            score = accuracy(test_labels, result_set)
+
+            entry_index_list = list(filter(lambda item : item == 1, result_set))
+            total_list.append([gain_th, loss_th, score, len(entry_index_list), score * gain_th + (1 - score) * loss_th])
+            
+            #print('Gain roic:', gain_th, 'Lost roic:', loss_th, 'Probability:', score, 'Total:', score * gain_th + (1 - score) * loss_th)
+            #print('Satisified count:',np.sum(test_labels == 1))
+            
+        
+           # print('entry times: ', len(entry_index_list))
+            #print('Mean profit:', np.mean(test_records[success_index_list][:, 6]))
+            #print()
+            
+    ordered_list = sorted(total_list, key = lambda item : item[-1], reverse = True)
+    for item in ordered_list:
+        print(item)
+
+def find_by_min():
+    min_roic_th_list = range(-10,0)
+
+    for roic_th in min_roic_th_list:
+        fit_records = np.array(list( filter(lambda record : record[4] >= roic_th, records) ))
+        print('Roic in lose rate:', roic_th, 'Mean roic:', fit_records[:, 6].sum() / len(fit_records), 'of', len(fit_records))
 
 
-predict()
+for record in records:
+    mark = int(float(record[6]) > 0)
 
-
-'''
-tarin_features = np.array(list(filter(lambda fields : fields[6] > 0 and fields[6] < 10, orign_features)))
-test_features = np.array(list(filter(lambda fields : fields[6] <= 0 or fields[6] >= 10, orign_features)))
-'''
-
-'''
-tarin_features = orign_features[:-10]
-test_features = orign_features[-10:]
-
-#test_features = np.array([test_features])
-
-
-tarin_features, train_lables = constructLossData(tarin_features)
-test_features, test_lables = constructLossData(test_features)
-
-
-clf = LogisticRegression()
-
-fiter = clf.fit(tarin_features, train_lables)
-
-result_set = (fiter.predict(test_features), range(len(test_features)))
-score = accuracy(test_lables[result_set[1]], result_set[0])
-print(score, np.mean(score)) 
-
-
-
-print('LogisticRegression: \r')  
-testLR(features, labels)  
-      
-print('GaussianNB: \r')  
-testGaussianNB(features, labels)  
-      
-print('KNN: \r')  
-testKNN(features, labels)  
-      
-print('SVM: \r')  
-testSVM(features, labels)  
-      
-print('Decision Tree: \r')  
-testDecisionTree(features, labels)  
-      
-print('Random Forest: \r')  
-testRandomForest(features, labels)
-
-
-data_set = orign_features[:, 0]
-data_set = np.column_stack((data_set, orign_features[:, [6]]))
-
-for i in range(len(data_set)):
-    plt.plot(data_set[i][0], data_set[i][1], MARK_STR[labels[i]])
-
+    plt.plot(record[2], record[0], MARK_STR[mark])
 #plt.show()
-'''
+
+#find_by_min()
+predict()
+#best_evbb()

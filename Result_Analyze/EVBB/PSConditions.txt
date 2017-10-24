@@ -1,0 +1,571 @@
+ACU, 20160701, Capital Goods
+
+ALJJ, 20141231, Miscellaneous
+
+ALLT, 20090604, Technology
+
+ALLT, 20100111, Technology
+
+ALLT, 20100406, Technology
+
+ALLT, 20100426, Technology
+
+ALLT, 20101129, Technology
+
+ALLT, 20101206, Technology
+
+ALLT, 20110110, Technology
+
+AMRB, 20120330, Finance
+
+AMRB, 20140102, Finance
+
+AMWD, 20121017, Basic Industries
+
+AMWD, 20121106, Basic Industries
+
+ANCX, 20120201, Finance
+
+ANCX, 20130122, Finance
+
+ANCX, 20130308, Finance
+
+ANCX, 20160915, Finance
+
+ASTC, 20090929, Capital Goods
+
+ASTC, 20160309, Capital Goods
+
+ATAI, 20110511, Consumer Services
+
+ATAI, 20110601, Consumer Services
+
+ATAI, 20150615, Consumer Services
+
+ATAI, 20150625, Consumer Services
+
+ATTU, 20130919, Technology
+
+AVNW, 20161123, Technology
+
+BBGI, 20090109, Consumer Services
+
+BBGI, 20130311, Consumer Services
+
+BBGI, 20130320, Consumer Services
+
+BBGI, 20130618, Consumer Services
+
+BBGI, 20130711, Consumer Services
+
+BBGI, 20170327, Consumer Services
+
+BLX, 20120223, Finance
+
+BRN, 20110112, Energy
+
+BRT, 20160831, Consumer Services
+
+BRT, 20170117, Consumer Services
+
+CHCI, 20090917, Capital Goods
+
+CHCI, 20100414, Capital Goods
+
+CHCI, 20120313, Capital Goods
+
+CIGI, 20100329, Finance
+
+CIGI, 20130403, Finance
+
+CLAR, 20161104, Consumer Non-Durables
+
+CLCT, 20091102, Miscellaneous
+
+CLCT, 20091109, Miscellaneous
+
+CLCT, 20130805, Miscellaneous
+
+CLCT, 20170203, Miscellaneous
+
+CLFD, 20090915, Public Utilities
+
+CLFD, 20101217, Public Utilities
+
+CLFD, 20110728, Public Utilities
+
+CLFD, 20130606, Public Utilities
+
+CNBKA, 20090626, Finance
+
+CNBKA, 20090819, Finance
+
+CNTY, 20110318, Consumer Services
+
+CNTY, 20110407, Consumer Services
+
+CNTY, 20130515, Consumer Services
+
+CNTY, 20130603, Consumer Services
+
+CNTY, 20130814, Consumer Services
+
+CNTY, 20140319, Consumer Services
+
+CNTY, 20150605, Consumer Services
+
+CPSS, 20121005, Finance
+
+CPSS, 20130205, Finance
+
+CRVL, 20101230, Finance
+
+CRWS, 20120327, Basic Industries
+
+CRWS, 20120413, Basic Industries
+
+CRWS, 20160328, Basic Industries
+
+CRWS, 20160715, Basic Industries
+
+CUBN, 20160324, Finance
+
+CVGI, 20131023, Capital Goods
+
+CWAY, 20170301, Finance
+
+CWAY, 20170410, Finance
+
+DGAS, 20091109, Public Utilities
+
+DGAS, 20120426, Public Utilities
+
+DGAS, 20160128, Public Utilities
+
+DGLY, 20130829, Technology
+
+DPW, 20101103, Capital Goods
+
+DSWL, 20170615, Consumer Non-Durables
+
+DSWL, 20170703, Consumer Non-Durables
+
+DSWL, 20170815, Consumer Non-Durables
+
+DWCH, 20120911, Technology
+
+DWCH, 20170725, Technology
+
+DZSI, 20090826, Public Utilities
+
+DZSI, 20170724, Public Utilities
+
+EBMT, 20161114, Finance
+
+EBTC, 20121004, Finance
+
+EBTC, 20141030, Finance
+
+DXYN, 20130425, Consumer Durables
+
+DXYN, 20130501, Consumer Durables
+
+DXYN, 20130607, Consumer Durables
+
+DXYN, 20131030, Consumer Durables
+
+EDUC, 20151008, Consumer Durables
+
+EGAN, 20130307, Technology
+
+EGAN, 20130628, Technology
+
+EGAN, 20171006, Technology
+
+EQS, 20170428, n/a
+
+FEIM, 20110111, Capital Goods
+
+FEIM, 20110310, Capital Goods
+
+FEIM, 20130625, Capital Goods
+
+FELP, 20161109, Energy
+
+FLWS, 20120622, Consumer Services
+
+FORD, 20100405, Consumer Non-Durables
+
+FORD, 20100503, Consumer Non-Durables
+
+FTEK, 20110103, Capital Goods
+
+GBLI, 20100324, Finance
+
+GENC, 20120702, Capital Goods
+
+GENC, 20131203, Capital Goods
+
+GENC, 20161202, Capital Goods
+
+GILT, 20100414, Technology
+
+GILT, 20121112, Technology
+
+GILT, 20161206, Technology
+
+GSB, 20140128, Technology
+
+GSB, 20150324, Technology
+
+GSB, 20170630, Technology
+
+GNUS, 20160527, Consumer Services
+
+GNUS, 20160616, Consumer Services
+
+GTY, 20160729, Finance
+
+GV, 20120614, Basic Industries
+
+HCI, 20120309, Finance
+
+HCKT, 20100818, Consumer Services
+
+HCKT, 20130807, Consumer Services
+
+HCKT, 20151111, Consumer Services
+
+HPJ, 20131029, Miscellaneous
+
+HPJ, 20170328, Miscellaneous
+
+HPJ, 20170410, Miscellaneous
+
+ICBK, 20161208, Finance
+
+IFON, 20140122, Consumer Non-Durables
+
+III, 20130812, Consumer Services
+
+III, 20140210, Consumer Services
+
+IMH, 20120815, Consumer Services
+
+INSE, 20170519, Technology
+
+ISIG, 20091209, Consumer Services
+
+ISIG, 20100429, Consumer Services
+
+ISIG, 20140320, Consumer Services
+
+ISSC, 20170612, Technology
+
+ITRN, 20090929, Consumer Non-Durables
+
+ITRN, 20091012, Consumer Non-Durables
+
+ITRN, 20100111, Consumer Non-Durables
+
+ITRN, 20130717, Consumer Non-Durables
+
+ITRN, 20130813, Consumer Non-Durables
+
+ITRN, 20131021, Consumer Non-Durables
+
+ITRN, 20150518, Consumer Non-Durables
+
+ITRN, 20160401, Consumer Non-Durables
+
+ITRN, 20160714, Consumer Non-Durables
+
+IXYS, 20101013, Technology
+
+IXYS, 20170203, Technology
+
+IXYS, 20170512, Technology
+
+IXYS, 20170602, Technology
+
+JCTCF, 20130711, Consumer Services
+
+JRJC, 20110425, Finance
+
+JRJC, 20131007, Finance
+
+KMG, 20090908, Basic Industries
+
+KMG, 20130211, Basic Industries
+
+KMG, 20130215, Basic Industries
+
+KMG, 20130531, Basic Industries
+
+KMG, 20130822, Basic Industries
+
+KOSS, 20110214, Consumer Non-Durables
+
+LARK, 20150303, Finance
+
+LBIX, 20090701, Consumer Non-Durables
+
+LBIX, 20090924, Consumer Non-Durables
+
+LBIX, 20130717, Consumer Non-Durables
+
+LCUT, 20100423, Capital Goods
+
+LCUT, 20100618, Capital Goods
+
+LCUT, 20140310, Capital Goods
+
+LION, 20100412, Finance
+
+LION, 20120503, Finance
+
+LION, 20120719, Finance
+
+LION, 20121018, Finance
+
+LION, 20130304, Finance
+
+LION, 20130528, Finance
+
+LION, 20141229, Finance
+
+MARPS, 20140514, Energy
+
+MATR, 20090626, Technology
+
+MATR, 20110318, Technology
+
+MATR, 20120412, Technology
+
+MATR, 20140108, Technology
+
+LTEA, 20170615, Consumer Non-Durables
+
+MCRI, 20101217, Consumer Services
+
+MCRI, 20130617, Consumer Services
+
+MCRI, 20131018, Consumer Services
+
+MRIN, 20171002, Technology
+
+MXPT, 20170918, Consumer Services
+
+NTWK, 20150212, Technology
+
+NTWK, 20151221, Technology
+
+NVFY, 20130530, Consumer Durables
+
+OCC, 20110124, Basic Industries
+
+OCC, 20110214, Basic Industries
+
+ONP, 20090526, Consumer Durables
+
+OTEL, 20170503, Public Utilities
+
+PBBI, 20170216, Finance
+
+PERY, 20140806, Consumer Non-Durables
+
+PERY, 20141114, Consumer Non-Durables
+
+PGC, 20130628, Finance
+
+PGC, 20140324, Finance
+
+PGC, 20150619, Finance
+
+PHIIK, 20100305, Transportation
+
+PHIIK, 20111027, Transportation
+
+PICO, 20161202, Finance
+
+PNTR, 20170606, Technology
+
+PKBK, 20140113, Finance
+
+PKBK, 20150320, Finance
+
+PPIH, 20101022, Capital Goods
+
+PPIH, 20130619, Capital Goods
+
+PPIH, 20130912, Capital Goods
+
+PPIH, 20131209, Capital Goods
+
+PPIH, 20160201, Capital Goods
+
+PRSS, 20150220, Consumer Services
+
+PTSI, 20091117, Transportation
+
+PTSI, 20100224, Transportation
+
+PTSI, 20100512, Transportation
+
+PTSI, 20131206, Transportation
+
+PYDS, 20130117, Finance
+
+PYDS, 20141117, Finance
+
+PYDS, 20150205, Finance
+
+PYDS, 20150304, Finance
+
+PYDS, 20161003, Finance
+
+RCMT, 20110407, Technology
+
+RLOG, 20100401, Consumer Services
+
+SCKT, 20170216, Technology
+
+SBFG, 20120709, Finance
+
+SGMA, 20130124, Technology
+
+SGMA, 20170531, Technology
+
+SGMA, 20170731, Technology
+
+SGRP, 20130627, Miscellaneous
+
+SITO, 20160816, Miscellaneous
+
+SKIS, 20170216, Consumer Services
+
+SKY, 20160115, Basic Industries
+
+SKY, 20160421, Basic Industries
+
+SKY, 20160923, Basic Industries
+
+SMBK, 20170601, Finance
+
+SOFO, 20101118, Technology
+
+SSBI, 20130214, n/a
+
+SSBI, 20140218, n/a
+
+SSBI, 20161206, n/a
+
+SYBX, 20170202, n/a
+
+TAX, 20131022, Miscellaneous
+
+TESS, 20100429, Consumer Non-Durables
+
+TISA, 20120417, Technology
+
+TISA, 20131122, Technology
+
+TPHS, 20160805, Consumer Services
+
+TPHS, 20160812, Consumer Services
+
+TREC, 20110103, Energy
+
+TREC, 20120403, Energy
+
+TREC, 20130628, Energy
+
+TREC, 20131016, Energy
+
+TREC, 20161202, Energy
+
+TSQ, 20170317, Consumer Services
+
+UIHC, 20130628, Finance
+
+UIHC, 20131209, Finance
+
+UPLD, 20170127, Technology
+
+UPLD, 20170601, Technology
+
+VDSI, 20110217, Technology
+
+VDSI, 20140724, Technology
+
+VERU, 20090626, Basic Industries
+
+VERU, 20120430, Basic Industries
+
+VERU, 20160310, Basic Industries
+
+VIRC, 20140808, Consumer Durables
+
+VIRC, 20160623, Consumer Durables
+
+VIRC, 20160706, Consumer Durables
+
+VSR, 20130717, Consumer Services
+
+VSR, 20130729, Consumer Services
+
+WLFC, 20100129, Consumer Durables
+
+WLFC, 20120706, Consumer Durables
+
+WLFC, 20121017, Consumer Durables
+
+WLFC, 20131016, Consumer Durables
+
+WLFC, 20160301, Consumer Durables
+
+YERR, 20170608, Finance
+
+ALOT, 20130315, Technology
+
+ALOT, 20130807, Technology
+
+FSNN, 20131017, Technology
+
+IDN, 20120319, Technology
+
+IDN, 20120502, Technology
+
+IDN, 20140319, Technology
+
+IDN, 20140324, Technology
+
+IDN, 20161213, Technology
+
+IDN, 20170505, Technology
+
+IDN, 20170515, Technology
+
+IOTS, 20170823, Technology
+
+KNOP, 20160926, Consumer Services
+
+LAND, 20170201, Consumer Services
+
+LAND, 20170209, Consumer Services
+
+GIGA, 20151201, Capital Goods
+
+NXRT, 20160624, Consumer Services
+
+REED, 20120507, Consumer Non-Durables
+
+WVVI, 20130305, Consumer Non-Durables
+
+WVVI, 20150423, Consumer Non-Durables
+
+WVVI, 20150721, Consumer Non-Durables
+
+WVVI, 20150731, Consumer Non-Durables
+
+TCCO, 20130611, Technology

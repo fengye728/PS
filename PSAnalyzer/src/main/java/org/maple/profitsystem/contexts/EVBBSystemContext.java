@@ -44,7 +44,7 @@ public class EVBBSystemContext {
 			if("Health Care".compareTo(company.getSector()) == 0) {
 				continue;
 			}
-			analyzerContext.setCompanyQuotes(company);
+			analyzerContext.loadCompanyQuotes(company);
 			tmpResults = evbbSystem.analyzeLast(company);
 			
 			
@@ -67,14 +67,12 @@ public class EVBBSystemContext {
 		// use EVBB System ot analyze 
 		List<EVBBSystemResult> satisfiedResults = new LinkedList<>();
 		for(CompanyModel company : companies) {
-//			if(company.getId() != 3114L) {
-//				continue;
-//			}
+
 			// DO NOT PROCESS Health Care sector
 			if("Health Care".compareTo(company.getSector()) == 0) {
 				continue;
 			}
-			analyzerContext.setCompanyQuotes(company);
+			analyzerContext.loadCompanyQuotes(company);
 			tmpResults = evbbSystem.analyzeBefore(company);
 			
 			
@@ -103,17 +101,19 @@ public class EVBBSystemContext {
 				
 				double entryPrice = evbbSystem.entryPrice(result);
 				// output csv for python analyze
+				int spikeIndex = result.getDayIndex();
 				int entryIndex = roic.getEntryIndex();
 				int exitIndex = roic.getDays() + entryIndex;
 				List<StockQuoteModel> quoteList = result.getCompany().getQuoteList();
-				double rateBeforeVol = (double)quoteList.get(result.getDayIndex()).getVolume() / TAUtil.MaxVolumeByIndex(quoteList, entryIndex - 1, 50);
-				double isTDD = TAUtil.ThreeDayDifference(quoteList, result.getDayIndex());
-				double rateEMAVol = (double)quoteList.get(result.getDayIndex()).getVolume() / TAUtil.EMAVolumeByIndex(quoteList, entryIndex - 1, 50);
+				
+				double rateBeforeVol = (double)quoteList.get(spikeIndex).getVolume() / TAUtil.MaxVolumeByIndex(quoteList, spikeIndex - 1, 30);
+				double isTDD = TAUtil.ThreeDayDifference(quoteList, spikeIndex);
+				double rateEMAVol = (double)quoteList.get(spikeIndex).getVolume() / TAUtil.EMAVolumeByIndex(quoteList, spikeIndex - 1, 50);
 				double rateSellVol;
 				if(TAUtil.MaxSellVolumeByIndex(quoteList, exitIndex - 1, roic.getDays() - 1) <= 0) {
 					rateSellVol = 0;
 				} else {
-					rateSellVol = (double)quoteList.get(result.getDayIndex()).getVolume() / TAUtil.MaxSellVolumeByIndex(quoteList, roic.getDays() + result.getDayIndex(), roic.getDays()); 
+					rateSellVol = (double)quoteList.get(spikeIndex).getVolume() / TAUtil.MaxSellVolumeByIndex(quoteList, exitIndex - 1, roic.getDays() - 1); 
 				}
 				
 				double minRoic = TAUtil.LowestPriceByIndex(quoteList, exitIndex - 1, roic.getDays()) * 100 / entryPrice - 100;
@@ -128,6 +128,9 @@ public class EVBBSystemContext {
 						+ roic.getRoic() * 100 + ","
 						+ result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate();
 				csvFile.add(item);
+				
+				System.out.println(result.getCompany().getSymbol() + ", " + result.getCompany().getQuoteList().get(spikeIndex).getQuoteDate() + ", " + result.getCompany().getSector());
+				System.out.println();
 			} catch (PSException e) {
 				e.printStackTrace();
 			}
