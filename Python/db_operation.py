@@ -45,3 +45,7 @@ class DBService:
         self.cursor.execute(SELECT_QUOTES_BY_SYMBOL_SQL % symbol)
         return pd.DataFrame(data = self.cursor.fetchall(), columns = QUOTE_COLUMN_LIST)
     
+    def execute_sql(self, sql):
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+    
