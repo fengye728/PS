@@ -8,6 +8,7 @@
 package org.maple.profitsystem.contexts;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -80,8 +81,15 @@ public class EVBBSystemContext {
 				continue;
 			
 			satisfiedResults.addAll(tmpResults);
+			
 		}
 		
+		// output satisfied results
+		// reverse sort
+		Collections.sort(satisfiedResults, (item1, item2) -> item1.getDayIndex() - item2.getDayIndex());
+		for(EVBBSystemResult result : satisfiedResults) {
+			System.out.println(result.getCompany().getSymbol() + ", " + result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate() + ", " + result.getCompany().getSector());
+		}
 		
 		logger.info("Satisfied result number: " + satisfiedResults.size());
 		
@@ -129,8 +137,6 @@ public class EVBBSystemContext {
 						+ result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate();
 				csvFile.add(item);
 				
-				System.out.println(result.getCompany().getSymbol() + ", " + result.getCompany().getQuoteList().get(spikeIndex).getQuoteDate() + ", " + result.getCompany().getSector());
-				System.out.println();
 			} catch (PSException e) {
 				e.printStackTrace();
 			}
