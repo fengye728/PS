@@ -1,5 +1,6 @@
 import psycopg2 as db
 import pandas as pd
+import numpy as np
 
 # Columns Name #
 COMPANY_COLUMN_LIST = ['symbol', 'name', 'ipo_year', 'sector', 'industry']
@@ -39,13 +40,15 @@ class DBService:
     def get_companies(self):
         '''Return DataFrame of companies'''
         self.cursor.execute(SELECT_ALL_COMPANIES_SQL)
-        return pd.DataFrame(data = self.cursor.fetchall(), columns = COMPANY_COLUMN_LIST)
+        return np.array(self.cursor.fetchall())
+        #return pd.DataFrame(data = self.cursor.fetchall(), columns = COMPANY_COLUMN_LIST)
 
     def get_quotes_by_symbol(self, symbol):
         self.cursor.execute(SELECT_QUOTES_BY_SYMBOL_SQL % symbol)
-        return pd.DataFrame(data = self.cursor.fetchall(), columns = QUOTE_COLUMN_LIST)
+        return np.array(self.cursor.fetchall())
+        #return pd.DataFrame(data = self.cursor.fetchall(), columns = QUOTE_COLUMN_LIST)
     
     def execute_sql(self, sql):
         self.cursor.execute(sql)
-        return self.cursor.fetchall()
+        return np.array(self.cursor.fetchall())
     
