@@ -1,94 +1,10 @@
-import math
 import numpy as np
 import matplotlib.pyplot as plt
 from db_operation import DBService
+import random
 
 def get_dao():
     return DBService('ps', 'postgres', '123456', 'localhost','5432')
-
-def is_breakout(quotes, index, entry_period):
-    SMA200 = np.mean(quotes[index - 200 : index, 2])
-    SMA50 = np.mean(quotes[index - 50 : index, 2])
-
-    if SMA50 < SMA200:
-        return 0
-    
-    max_price = np.max(quotes[index - entry_period : index, 3])
-    min_price = np.min(quotes[index - entry_period : index, 4])
-    if quotes[index, 4] < min_price:
-        return -1
-    elif quotes[index, 3] > max_price:
-        return 1
-    else:
-        return 0
-
-def key_price(quotes, index, pos, period):
-    max_price = np.max(quotes[index - period : index, 3])
-    min_price = np.min(quotes[index - period : index, 4])
-    if pos == 1:
-        # long
-        if quotes[index, 1] > max_price:
-            return quotes[index, 1]
-        else:
-            return max_price
-    elif pos == -1:
-        # short
-        if quotes[index, 1] < min_price:
-            return quotes[index, 1]
-        else:
-            return min_price
-
-def donchian_channel(quotes, entry_period, exit_period):
-    start_index = 200
-
-    # trade records: a list of trades
-    records = []
-    # trade: [pos , entry_price, exit_price, roic, days]
-    trade = [0, 0, 0, 0.0, 0]
-    # now position: 0: null; -1: short; 1 : long
-    pos = 0
-    for i in range(start_index, len(quotes)):
-        if pos == 0:
-            # ready to entry
-            # state in i  for entry
-            state = is_breakout(quotes, i, entry_period)
-            # entry
-            if state != 0:
-                # open postion
-                pos = state
-                trade[0] = pos
-                trade[1] = key_price(quotes, i, state, entry_period)
-                trade[4] = i
-
-        else:
-            # ready to exit
-            state = is_breakout(quotes, i, exit_period)
-            # exit
-            if pos + state == 0:
-                trade[2] = key_price(quotes, i, state, exit_period)
-                if trade[0] == 1:
-                    # long
-                    trade[3] = float(trade[2]) / trade[1] - 1
-                else:
-                    # short
-                    trade[3] = float(trade[1]) / trade[2] - 1                
-                # close postion
-                trade[4] = i - trade[4]
-                pos = 0
-                records.append(trade.copy())
-
-    return records
-
-def evaluate(quotes, records):
-    records = np.array(records)
-    print('Count of records:', len(records), '\tMean ROIC:', np.mean(records[:, 3]), '\t', np.mean(records[:, 4]))
-
-    long_records = records[ records[:, 0] > 0]
-    short_records = records[ records[:, 0] < 0]
-
-    print('Count of long:', len(long_records), '\tMean ROIC:', np.mean(long_records[:, 3]))
-    print('Count of short:', len(short_records), '\tMean ROIC:', np.mean(short_records[:, 3]))
-
 
 def TR(quotes, index):
     pre_close = quotes[index - 1][2]
@@ -112,16 +28,111 @@ def ATR_list(quotes):
     plt.subplot(2, 1, 2)
     plt.plot(atr_x, atr_y, 'b')
     plt.show()
+
+# MPE and MAE
+def MPAE(quotes, index, period):
+    # ATR
+    atr = ATR(quotes, index, int(period / 2))
+
+    # MPE
+    max_price = np.max(quotes[ index + 1 : index + period + 1, 3])
+    mpe = max_price / quotes[index][2] / atr
+
+    # MAE
+    min_price = np.min(quotes[ index + 1 : index + period + 1, 4])
+    mae = min_price / quotes[index][2] / atr
+
+    return mpe, mae
+
+def is_breakout(quotes, index, entry_period):
+    SMA300 = np.mean(quotes[index - 300 : index, 2])
+    SMA50 = np.mean(quotes[index - 50 : index, 2])
     
+    max_price = np.max(quotes[index - entry_period : index, 3])
+    min_price = np.min(quotes[index - entry_period : index, 4])
+
+     
+    if quotes[index, 2] < min_price and SMA50 < SMA300:
+        return -1
+    elif quotes[index, 2] > max_price and SMA50 > SMA300:
+        return 1
+    else:
+        return 0
+
+def key_price(quotes, index, pos, period):
+    max_price = np.max(quotes[index - period : index, 3])
+    min_price = np.min(quotes[index - period : index, 4])
+    if pos == 1:
+        # long
+        if quotes[index, 1] > max_price:
+            return quotes[index, 1]
+        else:
+            return max_price
+    elif pos == -1:
+        # short
+        if quotes[index, 1] < min_price:
+            return quotes[index, 1]
+        else:
+            return min_price
+
+def donchian_channel(quotes, entry_period, exit_period):
+    start_index = 300
+
+    # trade records: a list of trades
+    records = []
+    # trade: [pos , mpe, mae]
+    # position: 0: null; -1: short; 1 : long
+    trade = [0, 0.0, 0.0]
+
+    i = start_index
+    while i < len(quotes) - exit_period:
+        # entry
+        pos = is_breakout(quotes, i, entry_period)
+
+        if pos != 0:
+            trade[0] = pos
+            trade[1], trade[2] = MPAE(quotes, i, exit_period)
+            records.append(trade.copy())
+            i += exit_period
+        else:
+            i += 1
+
+    return records
+
+def random_channel(quotes, entry_period, exit_period):
+
+    records = []
+    trade = [0, 0.0, 0.0]
+    for i in range(100):
+        index = random.randint(300, len(quotes) - exit_period)
+        trade[0] = 1
+        trade[1], trade[2] = MPAE(quotes, index, exit_period)
+        records.append(trade.copy())
+
+    return records
+
+def evaluate(quotes, records):
+    records = np.array(records)
+    #print('Count of records:', len(records), '\tMean E:', np.mean(records[:, 3]), '\t', np.mean(records[:, 4]))
+
+    long_records = records[ records[:, 0] > 0]
+    short_records = records[ records[:, 0] < 0]
+
+    print('Count of long:', len(long_records), '\tMean E:', np.sum(long_records[:, 1]) / np.sum(long_records[:, 2]))
+    print('Count of short:', len(short_records), '\tMean E:', np.sum(short_records[:, 1]) / np.sum(short_records[:, 2]))
+
+
 
 dao = get_dao()
 dao.connect()
 
-quotes = dao.get_quotes_by_symbol('TEVA').values
+quotes = dao.get_quotes_by_symbol('SDRL').values
 
-ATR_list(quotes)
-records = donchian_channel(quotes, 50, 22)
+#ATR_list(quotes)
+records = donchian_channel(quotes, 20, 50)
 
 evaluate(quotes, records)
+
+evaluate(quotes, random_channel(quotes, 20, 20))
 
 
