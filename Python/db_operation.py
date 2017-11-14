@@ -23,7 +23,7 @@ SELECT_QUOTES_BY_SYMBOL_SQL = 'SELECT quo.quote_date, quo.open, quo.close, quo.h
 
 class DBService:
 
-    def __init__(self, database, user, password, host, port):
+    def __init__(self, database = 'ps', user = 'postgres', password = '123456', host = 'localhost', port = '5432'):
         self.database = database
         self.user = user
         self.password = password
@@ -40,13 +40,13 @@ class DBService:
     def get_companies(self):
         '''Return DataFrame of companies'''
         self.cursor.execute(SELECT_ALL_COMPANIES_SQL)
-        return np.array(self.cursor.fetchall())
-        #return pd.DataFrame(data = self.cursor.fetchall(), columns = COMPANY_COLUMN_LIST)
+        #return np.array(self.cursor.fetchall())
+        return pd.DataFrame(data = self.cursor.fetchall(), columns = COMPANY_COLUMN_LIST)
 
     def get_quotes_by_symbol(self, symbol):
         self.cursor.execute(SELECT_QUOTES_BY_SYMBOL_SQL % symbol)
-        return np.array(self.cursor.fetchall())
-        #return pd.DataFrame(data = self.cursor.fetchall(), columns = QUOTE_COLUMN_LIST)
+        #return np.array(self.cursor.fetchall())
+        return pd.DataFrame(data = self.cursor.fetchall(), columns = QUOTE_COLUMN_LIST)
     
     def execute_sql(self, sql):
         self.cursor.execute(sql)
