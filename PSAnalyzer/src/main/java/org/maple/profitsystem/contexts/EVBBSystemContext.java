@@ -97,9 +97,9 @@ public class EVBBSystemContext {
 
 		List<String> csvFile = new ArrayList<>();
 		for(EVBBSystemResult result : satisfiedResults) {
-//			if (result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate() < 20170101) {
-//				continue;
-//			}
+			if (result.getCompany().getQuoteList().get(result.getDayIndex()).getQuoteDate() < 20170101) {
+				continue;
+			}
 			try {
 				RoicModel roic = evbbSystem.evaluateByTDD(result);
 				if(null == roic) {

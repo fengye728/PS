@@ -178,15 +178,6 @@ public class EVBBSystem {
 			return null;
 		}
 		
-		// TODO FDO Filter
-//		try {
-//			if(TAUtil.FiveDayOscillator(evbbResult.getCompany().getQuoteList(), evbbResult.getDayIndex()) < 70) {
-//				return null;
-//			}
-//		} catch (PSException e) {
-//			e.printStackTrace();
-//		}
-
 		double point = entryPrice(evbbResult);
 		
 		int leftDays = Math.min(ENTRY_WAIT_DAYS_AFTER_SPIKE, evbbResult.getCompany().getQuoteList().size() - evbbResult.getDayIndex() - 1);
