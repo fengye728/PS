@@ -47,6 +47,20 @@ class DBService:
         self.cursor.execute(SELECT_QUOTES_BY_SYMBOL_SQL % symbol)
         #return np.array(self.cursor.fetchall())
         return pd.DataFrame(data = self.cursor.fetchall(), columns = QUOTE_COLUMN_LIST)
+
+    def get_all_quotes(self):
+        ''' Return a map with key that's stock symbol and value that's quotes'''
+        companies = self.get_companies()
+        all_quotes = {}
+        for symbol in companies.symbol.values:
+            quotes = self.get_quotes_by_symbol(symbol)
+            # filter quotes
+            if np.any(quotes.volume < 100):
+                continue
+            else:
+                all_quotes[symbol] = quotes
+
+        return all_quotes
     
     def execute_sql(self, sql):
         self.cursor.execute(sql)

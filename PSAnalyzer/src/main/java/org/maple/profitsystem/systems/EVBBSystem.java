@@ -12,13 +12,12 @@ import java.util.List;
 
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyModel;
-import org.maple.profitsystem.models.RoicModel;
 import org.maple.profitsystem.models.StockQuoteModel;
 import org.maple.profitsystem.utils.TAUtil;
 import org.springframework.stereotype.Component;
 
 /**
- * Explosive volume based breakouts system.
+ * Explosive volume based breakout system.
  * 
  * @author Maple
  *
@@ -26,11 +25,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class EVBBSystem {
 	
+	// Total 12
 	public final static int THRESOLD = 11;
 	
-	private final static int ENTRY_WAIT_DAYS_AFTER_SPIKE = 3;
-	
-	public static int EXIT_MAX_WAIT_DAYS = 30;
+	private final static int ENTRY_WAIT_DAYS_AFTER_SPIKE = 60;
 	
 	/**
 	 * Analyzes the company and finds the all moments which satisfied the EVBBSystem's condition
@@ -103,93 +101,6 @@ public class EVBBSystem {
 		return result;
 	}
 	
-	public Double evaluateByCCI(EVBBSystemResult evbbResult) throws PSException {
-		final int MAX_PERIOD = 30;
-		List<StockQuoteModel> quotes = evbbResult.getCompany().getQuoteList();
-		int len = quotes.size() < evbbResult.getDayIndex() + MAX_PERIOD ? quotes.size() : evbbResult.getDayIndex() + MAX_PERIOD;
-		
-		double lastCCI = 0;
-		int i = evbbResult.getDayIndex();
-		for(; i < len && lastCCI >= 0; i++) {
-			lastCCI = TAUtil.CCI(quotes, i);
-		}
-		--i;
-		if(i <= evbbResult.getDayIndex()) {
-			return null;
-		}
-		double entryP = entryPrice(evbbResult);
-		return (quotes.get(i).getOpen() - entryP) / entryP;
-	}
-	
-	/**
-	 * Leave when the next day open.
-	 * @param evbbResult
-	 * @return
-	 * @throws PSException 
-	 */
-	public RoicModel evaluateByTDD(EVBBSystemResult evbbResult) throws PSException {
-		Integer entryIndex = getEntryDateIndex(evbbResult);
-		if(null == entryIndex) {
-			return null;
-		}
-		
-		double entryP = entryPrice(evbbResult);
-		RoicModel result = new RoicModel();
-		
-		Integer exitIndex = getExitSignalDateIndexByTDD(evbbResult.getDayIndex(), evbbResult);
-		if(null == exitIndex) {
-			// no signal for exitting
-			return null;
-		} else if(exitIndex < entryIndex) {
-			// haven't entry
-			return null;
-		} else if(exitIndex == evbbResult.getCompany().getQuoteList().size() - 1) {
-			// need to leave in next day
-			return null;
-		} else {
-			++exitIndex;
-		}
-		
-		double exitP = evbbResult.getCompany().getQuoteList().get(exitIndex).getOpen();
-		
-		double roic = (exitP - entryP) / entryP;
-		
-		
-		result.setSymbol(evbbResult.getCompany().getSymbol());
-		result.setSector(evbbResult.getCompany().getSector());
-		result.setRoic(roic);
-		result.setDays(exitIndex - entryIndex);
-		result.setEntryIndex(entryIndex);
-		
-		return result;
-	}
-	
-	/**
-	 * Check if the evbbResult can entry.
-	 * 
-	 * @param evbbResult
-	 * @return Index of entry date in quotes if entry success, null otherwise.  
-	 */
-	public Integer getEntryDateIndex(EVBBSystemResult evbbResult) {
-		StockQuoteModel quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex());
-		
-		// TODO Any no trading before 30 days
-		if(hasNoTradingDayBefore(evbbResult.getCompany(), evbbResult.getDayIndex())) {
-			return null;
-		}
-		
-		double point = entryPrice(evbbResult);
-		
-		int leftDays = Math.min(ENTRY_WAIT_DAYS_AFTER_SPIKE, evbbResult.getCompany().getQuoteList().size() - evbbResult.getDayIndex() - 1);
-		for(int i = 1; i <= leftDays; ++i) {
-			quote = evbbResult.getCompany().getQuoteList().get(evbbResult.getDayIndex() + i);
-			if(quote.getLow() <= point) {
-				return evbbResult.getDayIndex() + i;
-			}
-		}
-		return null;
-	}
-	
 	/**
 	 * Get the limit price of entry price.
 	 * @param evbbResult
@@ -200,42 +111,6 @@ public class EVBBSystem {
 		return (quote.getHigh() + quote.getLow()) / 2;
 	}
 	
-	/**
-	 * Get index of exit date by Three Days Difference.
-	 * @param evbbResult
-	 * @return The index of exit date satisfied the TDD requirements or reach the max wait days.
-	 * @throws PSException 
-	 */
-	private Integer getExitSignalDateIndexByTDD(int entryIndex, EVBBSystemResult evbbResult) throws PSException {
-		final double TDD_THRESHOLD = 0;
-		final int FDO_BEARISH_THRESHOLD = 30; 
-		// Leave when second TDD is negative.
-		final int NEGATIVE_TIME_THRESHOLD = 2;
-		
-		List<StockQuoteModel> quotes = evbbResult.getCompany().getQuoteList();
-		
-		int negativeCount = 0;
-		boolean lastOverThreshold = true;
-		for(int i = entryIndex; i < quotes.size(); ++i) {
-			double fdo = TAUtil.FiveDayOscillator(quotes, i);
-			double tdd = TAUtil.ThreeDayDifference(quotes, i);
-			
-			if(tdd <= TDD_THRESHOLD) {
-				if(lastOverThreshold || fdo < FDO_BEARISH_THRESHOLD) {
-					lastOverThreshold = false;
-					++negativeCount;
-				}
-				if(negativeCount >= NEGATIVE_TIME_THRESHOLD) {
-					return i;
-				}
-			} else {
-				lastOverThreshold = true;
-			}
-		}
-		
-		// null if not yet exit
-		return null;
-	}
 	// ---------------------- Private Functions ----------------------------------
 	
 	/**
@@ -256,6 +131,9 @@ public class EVBBSystem {
 	 */
 	private EVBBSystemResult analyzeByIndex(CompanyModel company, int quoteIndex) {
 		
+		if(hasNoTradingDayBefore(company, quoteIndex)) {
+			return null;
+		}
 		EVBBSystemResult result = new EVBBSystemResult();
 		
 		// fundamental requirements
@@ -286,7 +164,7 @@ public class EVBBSystem {
 	}
 	
 	private boolean hasNoTradingDayBefore(CompanyModel company, int targetIndex) {
-		final int BEFORE_DAYS = 30;
+		final int BEFORE_DAYS = 60;
 		
 		int beforeDays = Math.min(BEFORE_DAYS, targetIndex);
 		List<StockQuoteModel> quotes = company.getQuoteList();
@@ -366,15 +244,15 @@ public class EVBBSystem {
 	}
 	
 	private boolean testLowSMAVolume(CompanyModel company, int targetIndex) {
-		final int VOLUME_THRESHOLD = 300000;
-		final int SMA_DAYS = 50;
+		final int VOLUME_THRESHOLD = 30000;
+		final int SMA_DAYS = 50; 
 		
 		if(targetIndex < SMA_DAYS) {
 			return false;
 		}
 		
 		try {
-			if(TAUtil.SMAVolumeByIndex(company.getQuoteList(), targetIndex - 1, SMA_DAYS) <= VOLUME_THRESHOLD) {
+			if(TAUtil.SMAVolumeByIndex(company.getQuoteList(), targetIndex - 1, SMA_DAYS) >= VOLUME_THRESHOLD) {
 				return true;
 			} else {
 				return false;
@@ -382,6 +260,22 @@ public class EVBBSystem {
 		} catch (PSException e) {
 			return false;
 		}
+//		final int VOLUME_THRESHOLD = 300000;
+//		final int SMA_DAYS = 50; 
+//		
+//		if(targetIndex < SMA_DAYS) {
+//			return false;
+//		}
+//		
+//		try {
+//			if(TAUtil.SMAVolumeByIndex(company.getQuoteList(), targetIndex - 1, SMA_DAYS) <= VOLUME_THRESHOLD) {
+//				return true;
+//			} else {
+//				return false;
+//			}
+//		} catch (PSException e) {
+//			return false;
+//		}
 	}
 	
 	private boolean testIntradayUp(CompanyModel company, int targetIndex) {
@@ -408,20 +302,30 @@ public class EVBBSystem {
 	
 	private boolean testAboveLowPriceLimit(CompanyModel company, int targetIndex) {
 		final double LOW_PRICE = 2.0;
-		StockQuoteModel curQuote = company.getQuoteList().get(targetIndex);
-		if(LOW_PRICE < curQuote.getClose()) {
-			return true;
-		} else {
+		final int SMA_DAYS = 50;
+		try {
+			double price = TAUtil.SMAPriceByIndex(company.getQuoteList(), targetIndex, SMA_DAYS);
+			if(LOW_PRICE < price) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (PSException e) {
 			return false;
 		}
 	}
 	
 	private boolean testBelowHighPriceLimit(CompanyModel company, int targetIndex) {
 		final double HIGH_PRICE = 25.0;
-		StockQuoteModel curQuote = company.getQuoteList().get(targetIndex);
-		if(HIGH_PRICE > curQuote.getClose()) {
-			return true;
-		} else {
+		final int SMA_DAYS = 50;
+		try {
+			double price = TAUtil.SMAPriceByIndex(company.getQuoteList(), targetIndex, SMA_DAYS);
+			if(HIGH_PRICE > price) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (PSException e) {
 			return false;
 		}
 	}
@@ -434,9 +338,14 @@ public class EVBBSystem {
 		final int VOLUME_TIMES = 3;
 		StockQuoteModel curQuote = company.getQuoteList().get(targetIndex);
 		StockQuoteModel beforeQuote = company.getQuoteList().get(targetIndex - 1);
-		if(curQuote.getVolume() >= beforeQuote.getVolume() * VOLUME_TIMES) {
-			return true;
-		} else {
+		try {
+			if(curQuote.getVolume() >= beforeQuote.getVolume() * VOLUME_TIMES 
+					&& curQuote.getVolume() >= TAUtil.SMAVolumeByIndex(company.getQuoteList(), targetIndex, 50)) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (PSException e) {
 			return false;
 		}
 	}
@@ -452,8 +361,8 @@ public class EVBBSystem {
 		try {
 			double ema = TAUtil.EMAVolumeByIndex(quotes, targetIndex - 1, EMA_SMA_DAYS);
 			double sma = TAUtil.SMAVolumeByIndex(quotes, targetIndex - 1, EMA_SMA_DAYS);
-			//if(sma < ema && ema < sma *  SMA_TIMES) {
-			if(ema < sma *  SMA_TIMES) {
+			if(sma < ema && ema < sma *  SMA_TIMES) {
+			//if(ema < sma *  SMA_TIMES) {
 				return true;
 			} else {
 				return false;

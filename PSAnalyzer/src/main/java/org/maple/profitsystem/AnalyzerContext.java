@@ -32,8 +32,6 @@ public class AnalyzerContext {
 		postLoadData();
 		
 		evbbContext.getWatchList(companies);
-		
-		evbbContext.train(companies);
 	}
 	
 	public void loadCompanyQuotes(CompanyModel company) {
