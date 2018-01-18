@@ -15,6 +15,8 @@ public class CommonConstants {
 	
 	public final static int BUFFER_SIZE_OF_READER = 524288;	// 512 * 1024
 	
+	public final static String STOCK_SYMBOL_REG = "[^$.^]*";
+	
 	// --------------- Properties Default Value ---------------------
 	public final static int DEFAULT_MAX_THREADS = 5;
 	
@@ -27,7 +29,6 @@ public class CommonConstants {
 	// -------------- Date Format -----------------------------------
 	public final static String DATE_FORMAT_OUT = "yyyyMMdd";
 	public final static String DATE_FORMAT_NASDAQ_IN = "yyyy/MM/dd";
-	
 	
 	// ---------------- CSV ------------------------------
 	public final static String CSV_SEPRATOR_BETWEEN_FIELD = "\",\"";

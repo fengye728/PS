@@ -34,8 +34,8 @@ def EMA(data_list, index, period = 14):
     multiplier = 2 / (period + 1)
     prev_ema = np.mean(data_list[0 : period])
     cur_ema = 0
-    for i in range(period, len(data_list)):
-        cur_ema = (data_list[i] - prev_ema) * multuplier + prev_ema
+    for i in range(period, index + 1):
+        cur_ema = (data_list[i] - prev_ema) * multiplier + prev_ema
         prev_ema = cur_ema
     return cur_ema
 

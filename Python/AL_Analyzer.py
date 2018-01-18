@@ -26,7 +26,7 @@ def conbine_sql(symbol, start_day, end_day, expiration):
 dao = get_db()
 dao.connect()
 
-sql = conbine_sql('AMD',170901, 171025, 171025)
+sql = conbine_sql('YIN',170901, 171025, 171025)
 
 r = dao.execute_sql(sql)
 print(r)
