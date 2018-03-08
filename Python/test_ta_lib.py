@@ -17,8 +17,12 @@ def reverse_bulge_list(quotes):
     # 0: in; 1: out
     status = 1
     result_list = []
+
+    # date filter just test
+    START_DT = -100
+    END_DT = -50
     
-    for i in range(0, len(quotes)):
+    for i in range(max(0, len(quotes) + START_DT), len(quotes) + END_DT):
         mi = ta_lib.MI(quotes, i)
         if mi is None:
             continue
@@ -32,20 +36,24 @@ def reverse_bulge_list(quotes):
 
 
 def exist_consolidation(quotes, index):
-    MAIN_PERIOD = 50
-    RECENT_PERIOD = 20
-    TIMES = 1.2
+    OB_PERIOD = 100
+    ATR_PERIOD = 14
     
-    if index < MAIN_PERIOD + RECENT_PERIOD:
-        return False
-    
-    main_atr = ta_lib.ATR(quotes, index - RECENT_PERIOD, MAIN_PERIOD)
-    recent_atr = ta_lib.ATR(quotes, index, RECENT_PERIOD)
+    TIMES = 1.5
 
-    if main_atr > recent_atr * TIMES:
-        return True
-    else:
-        return False
+    
+    for i in range(max(0, index - OB_PERIOD), index):
+        try:
+            
+            pre_vola = ta_lib.VOLATILITY_AN(quotes, i - ATR_PERIOD, ATR_PERIOD)
+            cur_vola = ta_lib.VOLATILITY_AN(quotes, i, ATR_PERIOD)
+                    
+            if pre_vola > cur_vola * TIMES:
+                return True
+        except:
+            pass
+
+    return False
     
     
 def draw(company, quotes):
@@ -89,6 +97,7 @@ def draw(company, quotes):
         # filter consolidation
         if not exist_consolidation(quotes, index):
             continue
+        '''
         # filter mfi
         if mfi_list[index] > 80:
             continue
@@ -99,7 +108,7 @@ def draw(company, quotes):
         if np.sum([ 1 if mfi < 40 else 0 for mfi in mfi_list[index - 50: index]]) > 20:
             continue
         # trend
-        
+        '''
         # print info
         high = np.max(quotes.iloc[index : index + EXAM_SIZE].high)
         low = np.min(quotes.iloc[index : index + EXAM_SIZE].low)

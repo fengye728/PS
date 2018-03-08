@@ -12,6 +12,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
@@ -27,20 +29,20 @@ public class NASDAQSpider {
 	
 	private static Logger logger = Logger.getLogger(NASDAQSpider.class);
 	
-	private final static int REQUEST_MAX_RETRY_TIMES = 5;
+	private final static int REQUEST_MAX_RETRY_TIMES = 3;
 	
 	private static Map<String, String> httpHeaders = null;
 	
 	static {
+		// set headers of http for nasdaq
 		httpHeaders = new HashMap<>();
 		
 		httpHeaders.put("Host", "www.nasdaq.com");
 		httpHeaders.put("Origin", "http://www.nasdaq.com");
-		
 	}
 	
 	/**
-	 * Fetch a list of companies from nasdaq.
+	 * Fetch a list of companies base info from nasdaq.
 	 * 
 	 * @return List of CompanyInfoModel, otherwise a empty list.
 	 * @throws HttpException 
@@ -74,41 +76,84 @@ public class NASDAQSpider {
 	 * @throws HttpException 
 	 */
 	public static List<StockQuoteModel> fetchNewestStockQuotesByCompany(CompanyModel company) throws PSException, HttpException {
-		List<StockQuoteModel> result = new ArrayList<>();
-		String responseStr = fetchHistoricalQuotes(company.getSymbol(), company.getLastQuoteDt());
-		if(responseStr == null)
-			return result;
-		
-		// parse response and get quote list
-		String[] records = responseStr.split(CommonConstants.CSV_NEWLINE_REG);
-		if(records.length <= 5) {
-			throw new PSException(company.getSymbol() + ": Content of quote list error!");
+		List<StockQuoteModel> result = null;
+		try {
+			result = fetchHistoricalQuotes(company.getSymbol(), company.getLastQuoteDt());
+		} catch (Exception e) {
 		}
-		for(int i = 2; i < records.length; ++i) {
+		
+		if(result != null) {
+			return result;
+		}
+		
+		// the other way fetching last period(3 months) quotes from nasdaq
+		try {
+			result = fetchLastQuotes(company.getSymbol(), company.getLastQuoteDt());
+		} catch(Exception e) {
+			throw new PSException(company.getSymbol() + ": " + e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Get stock last quotes from startDt to current using parsing html.   
+	 * @param symbol
+	 * @param startDt
+	 * @return
+	 * @throws HttpException 
+	 * @throws PSException 
+	 */
+	private static List<StockQuoteModel> fetchLastQuotes(String symbol, Integer startDt) throws HttpException, PSException {
+		final String TABLE_REGX_STR = "<table>\\s*<thead>[\\s\\S]*<tbody>([\\s\\S]*)</tbody>";
+		
+		String baseUrl = combineHistoricalQuotesUrl(symbol);
+		String responseStr = HttpRequestUtil.getMethod(baseUrl, httpHeaders, REQUEST_MAX_RETRY_TIMES);
+		
+		// truncate string to short string just storing quotes
+		// responseStr = responseStr.substring(105000, responseStr.length() - 30000);
+		
+		Pattern r = Pattern.compile(TABLE_REGX_STR);
+		Matcher m = r.matcher(responseStr);
+		if(!m.find()) {
+			throw new PSException("Content of quotes error!");
+		}
+		// parse html table to csv
+		String csv = m.group(1).replaceAll("<tr>(\\s*)<td>", "");
+		csv = csv.replaceAll("</td>(\\s*?)<td>", CommonConstants.CSV_SEPRATOR_BETWEEN_FIELD);
+		csv = csv.replaceAll("\\s*", "");
+		csv = csv.replaceAll("</td>(\\s*)</tr>", "\n");
+		
+		// parse all csv records to model
+		List<StockQuoteModel> result = new ArrayList<>();
+		
+		String[] records = csv.split(CommonConstants.CSV_NEWLINE_REG);
+		// the first line is real-time quote so skip it
+		for(int i = 1; i < records.length; ++i) {
 			try {
-				StockQuoteModel tmp = StockQuoteModel.parseFromTransportCSV(records[i]);
-				// check whether the quote existed 
-				if(tmp.getQuoteDate() <= company.getLastQuoteDt()) {
+				StockQuoteModel tmp = StockQuoteModel.parseFromHtmlCSV(records[i]);
+				if(tmp.getQuoteDate() <= startDt) {
 					break;
-				} else {
-					result.add(tmp);
 				}
+				result.add(tmp);
+				
 			} catch (PSException e) {
-				logger.error("Parse a quote record failed - " + company.getSymbol() + ": " + records[i]);
+				logger.error("Parse a quote record failed -" + records[i]);
 			}
 		}
 		return result;
 	}
 	
 	/**
-	 * Get string response for getting stock quotes from startDt to now date by http post method. 
+	 * Get stock quotes from startDt to current date using downloading csv file. 
 	 * 
 	 * @param symbol
 	 * @param startDt
 	 * @return
 	 * @throws HttpException 
+	 * @throws PSException 
 	 */
-	private static String fetchHistoricalQuotes(String symbol, Integer startDt) throws HttpException {
+	private static List<StockQuoteModel> fetchHistoricalQuotes(String symbol, Integer startDt) throws HttpException, PSException {
 		final String DATA_FIELD_FIVE_DAY = "5d";
 		final int FIVE_DAY_DAYS = 5;
 		final String DATA_FIELD_SIX_MONTH = "6m";
@@ -117,6 +162,7 @@ public class NASDAQSpider {
 		final int ONE_YEAR_DAYS = 365;
 		final String DATA_FIELD_TEN_YEAR = "10y";
 		
+		// construct web request
 		String fieldDate = null;
 		if(startDt <= 0) {
 			fieldDate = DATA_FIELD_TEN_YEAR;
@@ -145,7 +191,29 @@ public class NASDAQSpider {
 		propertyMap.put("Content-Type", "application/json");
 		propertyMap.putAll(httpHeaders);
 		
-		return HttpRequestUtil.postMethod(baseUrl, propertyMap, postData, REQUEST_MAX_RETRY_TIMES);
+		// get response from web
+		String responseStr = HttpRequestUtil.postMethod(baseUrl, propertyMap, postData, REQUEST_MAX_RETRY_TIMES);
+		
+		// parse response and get quote list
+		String[] records = responseStr.split(CommonConstants.CSV_NEWLINE_REG);
+		// check if the content is quotes 
+		if(records.length <= 5) {
+			throw new PSException("Content of quote list error!");
+		}
+		List<StockQuoteModel> result = new ArrayList<>();
+		for(int i = 2; i < records.length; ++i) {
+			try {
+				StockQuoteModel tmp = StockQuoteModel.parseFromTransportCSV(records[i]);
+				if(tmp.getQuoteDate() <= startDt) {
+					break;
+				}
+				result.add(tmp);
+				
+			} catch (PSException e) {
+				logger.error("Parse a quote record failed -" + records[i]);
+			}
+		}
+		return result;
 	}
 	
 	/**

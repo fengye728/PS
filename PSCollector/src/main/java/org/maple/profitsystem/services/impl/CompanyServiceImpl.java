@@ -186,7 +186,7 @@ public class CompanyServiceImpl implements CompanyService {
 
 	@Override
 	public int updateCompanyWithQuotes(CompanyModel record) {
-		if(null == record) {
+		if(null == record || record.getQuoteList() == null || record.getQuoteList().size() == 0) {
 			return 0;
 		}
 		List<StockQuoteModel> originQuotes = record.getQuoteList();

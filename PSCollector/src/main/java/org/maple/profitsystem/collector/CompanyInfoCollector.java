@@ -104,6 +104,8 @@ public class CompanyInfoCollector {
 	 */
 	public void updateListCompanyStatistics() {
 		logger.info("Updating statistics of companies...");
+		// reset fail count
+		CompanyStatisticsUpdateTask.failCount = 0;
 		
 		Calendar nowDt = Calendar.getInstance();
 		nowDt.add(Calendar.DAY_OF_MONTH, -properties.getStatisticsUpdatePeriod());
@@ -118,7 +120,7 @@ public class CompanyInfoCollector {
 			}
 		}
 		awaitThreadPool(executor);
-		logger.info("Updated statistics of companies completed!");
+		logger.info("Updated statistics of companies completed! Total: " + context.getCompanyList().size() + " Fail: " + CompanyStatisticsUpdateTask.failCount);
 	}
 	
 	/**
@@ -126,6 +128,8 @@ public class CompanyInfoCollector {
 	 */
 	public void updateListCompanyQuotes() {
 		logger.info("Updating stock quotes of companies...");
+		// reset fail count
+		CompanyQuotesUpdateTask.failCount = 0;
 		
 		ExecutorService executor = getNewThreadPool();
 		
@@ -133,9 +137,14 @@ public class CompanyInfoCollector {
 			if(!isNewestQuotes(company)) {
 				executor.execute(new CompanyQuotesUpdateTask(company)); 
 			}
+			// free memory of quotes of the company
+			company.setQuoteList(null);
 		}
 		awaitThreadPool(executor);
-		logger.info("Updated stock quotes of companies completed!");
+		
+		logger.info("Updated stock quotes of companies completed! Total: " + context.getCompanyList().size() + " Fail: " + CompanyQuotesUpdateTask.failCount);
+		
+		
 	}
 	
 	/**
@@ -169,7 +178,6 @@ public class CompanyInfoCollector {
 					return true;
 				}
 			}
-			
 		}
 	}
 	
@@ -198,14 +206,16 @@ public class CompanyInfoCollector {
 }
 
 /**
- * Fetch company statistics and update it to database.
+ * Fetch a company statistics and update it to database.
  * 
  * @author SEELE
  *
  */
 class CompanyStatisticsUpdateTask implements Runnable {
 
-	@Autowired
+	// count the number of fail companies
+	public static int failCount;
+	
 	private static CompanyStatisticsService companyStatisticsService;
 	
 	private static Logger logger = Logger.getLogger(CompanyStatisticsUpdateTask.class);
@@ -251,6 +261,7 @@ class CompanyStatisticsUpdateTask implements Runnable {
 			} catch (Exception e1) {
 				// can not get info to do this
 				logger.error(e.getMessage() + " | " + e1.getMessage());
+				++failCount;
 			}
 		}
 		return result;
@@ -259,12 +270,15 @@ class CompanyStatisticsUpdateTask implements Runnable {
 }
 
 /**
- * Fetch company statistics and update it to database.
+ * Fetch a company quotes and update it to database.
  * 
  * @author SEELE
  *
  */
 class CompanyQuotesUpdateTask implements Runnable {
+	
+	// count the number of fail companies
+	public static int failCount;
 
 	private static CompanyService companyService;
 	
@@ -294,9 +308,9 @@ class CompanyQuotesUpdateTask implements Runnable {
 	 */
 	private void updateCompanyQuotes() {
 		try{
-		company.setQuoteList(fetchNewestStockQuotes());
-		// get and set newest quotes
-		companyService.updateCompanyWithQuotes(company);
+			// get and set newest quotes
+			company.setQuoteList(fetchNewestStockQuotes());
+			companyService.updateCompanyWithQuotes(company);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -313,8 +327,9 @@ class CompanyQuotesUpdateTask implements Runnable {
 			// get company quotes
 			result = NASDAQSpider.fetchNewestStockQuotesByCompany(company);
 		} catch (Exception e) {
-			// TODO use YAHOO to fetch
+			// TODO use YAHOO to  fetch
 			logger.error(e.getMessage());
+			++failCount;
 		}
 		return result;
 	}

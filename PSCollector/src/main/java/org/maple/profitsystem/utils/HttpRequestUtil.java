@@ -41,8 +41,9 @@ public class HttpRequestUtil {
 			
 			// common property
 			conn.setRequestProperty("accept", "*/*");
-			conn.setRequestProperty("connection", "Keep-Alive");
+			conn.setRequestProperty("connection", "Keep-Alive");  
 			conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36");
+			conn.setInstanceFollowRedirects(false);
 			
 			if(data != null) {
 				conn.setDoOutput(true);
@@ -96,7 +97,6 @@ public class HttpRequestUtil {
 		if(!requestSuccess){
 			throw new HttpException(url, "GET", retryTime);
 		}
-		
 		return response;
 	}
 	
@@ -110,7 +110,7 @@ public class HttpRequestUtil {
 			} catch (IOException e1) {
 			}
 		}
-		if(!requestSuccess){
+		if(response == null || response == "" || !requestSuccess){
 			throw new HttpException(url, "POST", retryTime);
 		}
 		

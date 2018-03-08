@@ -108,7 +108,7 @@ companies = dao.get_companies()
 
 total_roic = []
 count = 0
-for symbol in companies[:, 0]:
+for symbol in companies.symbol:
     plt.title(symbol)
     quotes = dao.get_quotes_by_symbol(symbol)
     print(symbol)
