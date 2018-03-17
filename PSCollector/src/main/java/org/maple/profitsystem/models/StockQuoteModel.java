@@ -17,55 +17,6 @@ public class StockQuoteModel implements Comparable<StockQuoteModel>{
 	}
 	
 	/**
-	 * Parse csv format record stored in transporting to StockQuoteModel.
-	 * 
-	 * @param symbol
-	 * @param csvRecord
-	 * @return
-	 * @throws PSException
-	 */
-	public static StockQuoteModel parseFromTransportCSV(String csvRecord) throws PSException {
-		String[] fields = CSVUtil.splitCSVRecord(csvRecord);
-		try{
-			StockQuoteModel result = new StockQuoteModel();
-			result.quoteDate = Integer.valueOf(fields[0].replaceAll("/", ""));
-			result.close = Double.valueOf(fields[1]);
-			result.volume = Double.valueOf(fields[2]).intValue();
-			result.open = Double.valueOf(fields[3]);
-			result.high = Double.valueOf(fields[4]);
-			result.low = Double.valueOf(fields[5]);
-			
-			return result;
-		} catch(Exception e) {
-			throw new PSException(e.getMessage());
-		}
-	}
-	
-	/**
-	 * Parse csv format record extracted from html to StockQuoteModel.
-	 * @param csvRecord format <date, open, high, low, close, volume>
-	 * @return
-	 * @throws PSException
-	 */
-	public static StockQuoteModel parseFromHtmlCSV(String csvRecord) throws PSException {
-		String[] fields = CSVUtil.splitCSVRecord(csvRecord);
-		try{
-			StockQuoteModel result = new StockQuoteModel();
-			String quoteDate = fields[0].substring(6, 10) + fields[0].substring(0, 2) + fields[0].substring(3, 5);
-			result.quoteDate = Integer.valueOf(quoteDate);
-			result.open = Double.valueOf(fields[1]);
-			result.high = Double.valueOf(fields[2]);
-			result.low = Double.valueOf(fields[3]);
-			result.close = Double.valueOf(fields[4]);
-			result.volume = Integer.valueOf(fields[5].replaceAll(",", ""));
-			
-			return result;
-		} catch(Exception e) {
-			throw new PSException(e.getMessage());
-		}
-	}	
-	
-	/**
 	 * Parse csv format record stored in file to StockQuoteModel.
 	 * 
 	 * @param csvRecord

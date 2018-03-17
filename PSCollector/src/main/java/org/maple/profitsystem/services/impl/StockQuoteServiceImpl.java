@@ -36,7 +36,11 @@ public class StockQuoteServiceImpl implements StockQuoteService {
 		if(records == null || records.isEmpty()) {
 			return 0;
 		} else {
-			return stockQuoteModelMapper.insertList(records);
+			int count = 0;
+			for(StockQuoteModel record : records) {
+				count += addStockQuote(record);
+			}
+			return count;
 		}
 	}
 

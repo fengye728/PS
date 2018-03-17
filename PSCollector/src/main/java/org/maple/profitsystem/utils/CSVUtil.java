@@ -29,7 +29,7 @@ public class CSVUtil {
 		if(lIndex >= rIndex)
 			return null;
 		else
-			return rawField.substring(lIndex, rIndex).trim();
+			return trimStr.substring(lIndex, rIndex);
 	}
 	
 	public static String[] splitCSVRecord(String csvRecord) {

@@ -22,6 +22,7 @@ import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.models.StockQuoteModel;
+import org.maple.profitsystem.utils.CSVUtil;
 import org.maple.profitsystem.utils.HttpRequestUtil;
 import org.maple.profitsystem.utils.TradingDateUtil;
 
@@ -29,9 +30,9 @@ public class NASDAQSpider {
 	
 	private static Logger logger = Logger.getLogger(NASDAQSpider.class);
 	
-	private final static int REQUEST_MAX_RETRY_TIMES = 3;
-	
 	private static Map<String, String> httpHeaders = null;
+	
+	private final static String STOCK_SYMBOL_REG = "[^$.^]*";
 	
 	static {
 		// set headers of http for nasdaq
@@ -50,7 +51,7 @@ public class NASDAQSpider {
 	public static List<CompanyModel> fetchCompanyListWithBaseInfo() throws HttpException {
 		List<CompanyModel> result = new ArrayList<>();
 		
-		String response = HttpRequestUtil.getMethod(CommonConstants.URL_GET_COMPANY_LIST_NASDAQ, httpHeaders, REQUEST_MAX_RETRY_TIMES);
+		String response = HttpRequestUtil.getMethod(CommonConstants.URL_GET_COMPANY_LIST_NASDAQ, httpHeaders, CommonConstants.REQUEST_MAX_RETRY_TIMES);
 		String[] lines = response.split(CommonConstants.NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD);
 		for(int i = 1; i < lines.length; ++i) {
 			try{
@@ -62,7 +63,7 @@ public class NASDAQSpider {
 		}
 		// filter invalid company
 		return result.stream()
-				.filter(company -> company.getSymbol().matches(CommonConstants.STOCK_SYMBOL_REG) )
+				.filter(company -> company.getSymbol().matches(STOCK_SYMBOL_REG) )
 				.collect(Collectors.toList());
 	}
 	
@@ -75,10 +76,10 @@ public class NASDAQSpider {
 	 * @throws PSException
 	 * @throws HttpException 
 	 */
-	public static List<StockQuoteModel> fetchNewestStockQuotesByCompany(CompanyModel company) throws PSException, HttpException {
+	public static List<StockQuoteModel> fetchStockQuotes(String symbol, Integer startDt) throws PSException, HttpException {
 		List<StockQuoteModel> result = null;
 		try {
-			result = fetchHistoricalQuotes(company.getSymbol(), company.getLastQuoteDt());
+			result = fetchHistoricalQuotes(symbol, startDt);
 		} catch (Exception e) {
 		}
 		
@@ -87,11 +88,8 @@ public class NASDAQSpider {
 		}
 		
 		// the other way fetching last period(3 months) quotes from nasdaq
-		try {
-			result = fetchLastQuotes(company.getSymbol(), company.getLastQuoteDt());
-		} catch(Exception e) {
-			throw new PSException(company.getSymbol() + ": " + e.getMessage());
-		}
+		
+		result = fetchLastQuotes(symbol, startDt);
 		
 		return result;
 	}
@@ -108,7 +106,7 @@ public class NASDAQSpider {
 		final String TABLE_REGX_STR = "<table>\\s*<thead>[\\s\\S]*<tbody>([\\s\\S]*)</tbody>";
 		
 		String baseUrl = combineHistoricalQuotesUrl(symbol);
-		String responseStr = HttpRequestUtil.getMethod(baseUrl, httpHeaders, REQUEST_MAX_RETRY_TIMES);
+		String responseStr = HttpRequestUtil.getMethod(baseUrl, httpHeaders, CommonConstants.REQUEST_MAX_RETRY_TIMES);
 		
 		// truncate string to short string just storing quotes
 		// responseStr = responseStr.substring(105000, responseStr.length() - 30000);
@@ -131,7 +129,7 @@ public class NASDAQSpider {
 		// the first line is real-time quote so skip it
 		for(int i = 1; i < records.length; ++i) {
 			try {
-				StockQuoteModel tmp = StockQuoteModel.parseFromHtmlCSV(records[i]);
+				StockQuoteModel tmp = parseFromHtmlCSV(records[i]);
 				if(tmp.getQuoteDate() <= startDt) {
 					break;
 				}
@@ -192,7 +190,7 @@ public class NASDAQSpider {
 		propertyMap.putAll(httpHeaders);
 		
 		// get response from web
-		String responseStr = HttpRequestUtil.postMethod(baseUrl, propertyMap, postData, REQUEST_MAX_RETRY_TIMES);
+		String responseStr = HttpRequestUtil.postMethod(baseUrl, propertyMap, postData, CommonConstants.REQUEST_MAX_RETRY_TIMES);
 		
 		// parse response and get quote list
 		String[] records = responseStr.split(CommonConstants.CSV_NEWLINE_REG);
@@ -203,7 +201,7 @@ public class NASDAQSpider {
 		List<StockQuoteModel> result = new ArrayList<>();
 		for(int i = 2; i < records.length; ++i) {
 			try {
-				StockQuoteModel tmp = StockQuoteModel.parseFromTransportCSV(records[i]);
+				StockQuoteModel tmp = parseQuoteFromHistoricalCSV(records[i]);
 				if(tmp.getQuoteDate() <= startDt) {
 					break;
 				}
@@ -215,6 +213,47 @@ public class NASDAQSpider {
 		}
 		return result;
 	}
+	
+	private static StockQuoteModel parseQuoteFromHistoricalCSV(String csvRecord) throws PSException {
+		String[] fields = CSVUtil.splitCSVRecord(csvRecord);
+		try{
+			StockQuoteModel result = new StockQuoteModel();
+			result.setQuoteDate(Integer.valueOf(fields[0].replaceAll("/", "")));
+			result.setClose(Double.valueOf(fields[1]));
+			result.setVolume(Double.valueOf(fields[2]).intValue());
+			result.setOpen(Double.valueOf(fields[3]));
+			result.setHigh(Double.valueOf(fields[4]));
+			result.setLow(Double.valueOf(fields[5]));
+			
+			return result;
+		} catch(Exception e) {
+			throw new PSException(e.getMessage());
+		}
+	}
+	
+	/**
+	 * Parse csv format record extracted from html to StockQuoteModel.
+	 * @param csvRecord format <date, open, high, low, close, volume>
+	 * @return
+	 * @throws PSException
+	 */
+	private static StockQuoteModel parseFromHtmlCSV(String csvRecord) throws PSException {
+		String[] fields = CSVUtil.splitCSVRecord(csvRecord);
+		try{
+			StockQuoteModel result = new StockQuoteModel();
+			String quoteDate = fields[0].substring(6, 10) + fields[0].substring(0, 2) + fields[0].substring(3, 5);
+			result.setQuoteDate(Integer.valueOf(quoteDate));
+			result.setOpen(Double.valueOf(fields[1]));
+			result.setHigh(Double.valueOf(fields[2]));
+			result.setLow(Double.valueOf(fields[3]));
+			result.setClose(Double.valueOf(fields[4]));
+			result.setVolume(Integer.valueOf(fields[5].replaceAll(",", "")));
+			
+			return result;
+		} catch(Exception e) {
+			throw new PSException(e.getMessage());
+		}
+	}	
 	
 	/**
 	 * Combine the url to fetch historical quotes of the symbol specified stock.

@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.maple.profitsystem.Application;
-import org.maple.profitsystem.ConfigProperties;
 import org.maple.profitsystem.CollectorContext;
+import org.maple.profitsystem.ConfigProperties;
 import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyModel;
@@ -29,8 +29,8 @@ import org.maple.profitsystem.models.StockQuoteModel;
 import org.maple.profitsystem.services.CompanyService;
 import org.maple.profitsystem.services.CompanyStatisticsService;
 import org.maple.profitsystem.spiders.FINVIZSpider;
+import org.maple.profitsystem.spiders.InvestopediaSpider;
 import org.maple.profitsystem.spiders.NASDAQSpider;
-import org.maple.profitsystem.spiders.YAHOOSpider;
 import org.maple.profitsystem.utils.TradingDateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -251,18 +251,23 @@ class CompanyStatisticsUpdateTask implements Runnable {
 	 */
 	private CompanyStatisticsModel fetchCompanyStatisticsBySymbol(String symbol) {
 		CompanyStatisticsModel result = null;
+		
+		String errorMsg = symbol + ": ";
 		try {
 			// get company statistics info
 			result = FINVIZSpider.fetchCompanyStatistics(symbol);
-		} catch (Exception e) {
-			// use YAHOO to fetch
-			try {
-				result = YAHOOSpider.fetchCompanyStatistics(symbol);
-			} catch (Exception e1) {
-				// can not get info to do this
-				logger.error(e.getMessage() + " | " + e1.getMessage());
-				++failCount;
-			}
+		} catch (HttpException e) {
+			errorMsg += "FINVIZ Http failed | ";
+		} catch (PSException e) {
+			errorMsg += e.getMessage();
+		}
+		// use YAHOO to fetch ( yahoo is blocked now)
+		// result = YAHOOSpider.fetchCompanyStatistics(symbol);
+		
+		
+		if(result == null) {
+			logger.error(errorMsg);
+			++failCount;
 		}
 		return result;
 	}
@@ -323,13 +328,35 @@ class CompanyQuotesUpdateTask implements Runnable {
 	 */
 	private List<StockQuoteModel> fetchNewestStockQuotes() {
 		List<StockQuoteModel> result = null;
+		String errorMsg = company.getSymbol() + ": ";
+		
+		// Investopedia Spider
+		try {
+			result = InvestopediaSpider.fetchStockQuotes(company.getSymbol(), company.getLastQuoteDt());
+		} catch (HttpException e1) {
+			errorMsg += "Investopedia get failed | ";
+		} catch (PSException e1) {
+			errorMsg += "Investopedia " + e1.getMessage() + " | ";
+		}
+		
+		if(result != null) {
+			return result;
+		}
+		
+		// NASDAQ Spider
 		try {
 			// get company quotes
-			result = NASDAQSpider.fetchNewestStockQuotesByCompany(company);
-		} catch (Exception e) {
-			// TODO use YAHOO to  fetch
-			logger.error(e.getMessage());
-			++failCount;
+			result = NASDAQSpider.fetchStockQuotes(company.getSymbol(), company.getLastQuoteDt());
+		} catch (HttpException e) {
+			errorMsg += "Nasdaq get failed | ";
+
+		} catch (PSException e) {
+			errorMsg += "Nasdaq " + e.getMessage() + " | ";
+		}
+		
+		if(result == null) {
+			logger.error(errorMsg);
+			++failCount;			
 		}
 		return result;
 	}

@@ -68,8 +68,8 @@ public class CollectorContext {
 			// update and store all in first time
 			if(companyList.size() == 0) {
 				companyInfoCollector.addListNewCompaniesBaseInfo();
-				companyInfoCollector.updateListCompanyStatistics();
 				companyInfoCollector.updateListCompanyQuotes();
+				companyInfoCollector.updateListCompanyStatistics();
 			} else {
 				// update quotes first
 				companyInfoCollector.updateListCompanyQuotes();
@@ -77,8 +77,6 @@ public class CollectorContext {
 				companyInfoCollector.addListNewCompaniesBaseInfo();
 				companyInfoCollector.updateListCompanyStatistics();
 			}
-			
-			
 		}
 	}
 	
