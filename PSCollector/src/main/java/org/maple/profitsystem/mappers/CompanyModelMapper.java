@@ -25,5 +25,6 @@ public interface CompanyModelMapper {
     
     CompanyModel selectFullById(long id);
     
-    int insertList(List<CompanyModel> records);
+    // deprecated
+    //int insertList(List<CompanyModel> records);
 }

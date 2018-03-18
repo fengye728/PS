@@ -238,21 +238,28 @@ class CompanyStatisticsUpdateTask implements Runnable {
 	
 	private void updateCompanyStatistics() {
 		
-		CompanyStatisticsModel tmp = fetchCompanyStatisticsBySymbol(company.getSymbol());
-		if(company.getStatistics().set(tmp) != 0) {
-			// update statistics
-			companyStatisticsService.updateCompanyStatistics(company.getStatistics());
-		}		
+		CompanyStatisticsModel tmp;
+		try {
+			tmp = fetchCompanyStatisticsBySymbol(company.getSymbol());
+			if(company.getStatistics().set(tmp) != 0) {
+				// update statistics
+				companyStatisticsService.updateCompanyStatistics(company.getStatistics());
+			}
+		} catch (Exception e) {
+			logger.error(company.getSymbol() + " : " + e.getMessage());
+			++failCount;
+		}
 	}
 	
 	/**
 	 * Fetch the statistics info of the specified company.
 	 * @param company
+	 * @throws PSException 
 	 */
-	private CompanyStatisticsModel fetchCompanyStatisticsBySymbol(String symbol) {
+	private CompanyStatisticsModel fetchCompanyStatisticsBySymbol(String symbol) throws PSException {
 		CompanyStatisticsModel result = null;
 		
-		String errorMsg = symbol + ": ";
+		String errorMsg = "";
 		try {
 			// get company statistics info
 			result = FINVIZSpider.fetchCompanyStatistics(symbol);
@@ -266,8 +273,7 @@ class CompanyStatisticsUpdateTask implements Runnable {
 		
 		
 		if(result == null) {
-			logger.error(errorMsg);
-			++failCount;
+			throw new PSException(errorMsg);
 		}
 		return result;
 	}
@@ -317,7 +323,8 @@ class CompanyQuotesUpdateTask implements Runnable {
 			company.setQuoteList(fetchNewestStockQuotes());
 			companyService.updateCompanyWithQuotes(company);
 		} catch(Exception e) {
-			e.printStackTrace();
+			logger.error(company.getSymbol() + ": " + e.getMessage());
+			++failCount;
 		}
 
 	}
@@ -325,10 +332,11 @@ class CompanyQuotesUpdateTask implements Runnable {
 	/**
 	 * Fetch the statistics info of the specified company.
 	 * @param company
+	 * @throws PSException 
 	 */
-	private List<StockQuoteModel> fetchNewestStockQuotes() {
+	private List<StockQuoteModel> fetchNewestStockQuotes() throws PSException {
 		List<StockQuoteModel> result = null;
-		String errorMsg = company.getSymbol() + ": ";
+		String errorMsg = "";
 		
 		// Investopedia Spider
 		try {
@@ -339,7 +347,7 @@ class CompanyQuotesUpdateTask implements Runnable {
 			errorMsg += "Investopedia " + e1.getMessage() + " | ";
 		}
 		
-		if(result != null) {
+		if(result != null && result.size() > 0) {
 			return result;
 		}
 		
@@ -354,9 +362,8 @@ class CompanyQuotesUpdateTask implements Runnable {
 			errorMsg += "Nasdaq " + e.getMessage() + " | ";
 		}
 		
-		if(result == null) {
-			logger.error(errorMsg);
-			++failCount;			
+		if(result == null || result.size() <= 0) {
+			throw new PSException(errorMsg);
 		}
 		return result;
 	}
