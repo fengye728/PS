@@ -24,6 +24,7 @@ public class Application{
 	private static Logger logger = Logger.getLogger(Application.class);
 	
 	public static void main(String[] args){
+		
 		springContext = SpringApplication.run(Application.class, args);
 		
 		// get ps context

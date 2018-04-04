@@ -1,11 +1,4 @@
-/**
- * 
- */
-/**
- * @author Maple
- *
- */
-package org.maple.profitsystem.spiders;
+package org.maple.profitsystem.spiders.impl;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -14,25 +7,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
-import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.models.StockQuoteModel;
+import org.maple.profitsystem.spiders.QuoteSpider;
 import org.maple.profitsystem.utils.CSVUtil;
 import org.maple.profitsystem.utils.HttpRequestUtil;
 import org.maple.profitsystem.utils.TradingDateUtil;
 
-public class NASDAQSpider {
-	
-	private static Logger logger = Logger.getLogger(NASDAQSpider.class);
+public class NasdaqQuoteSpider implements QuoteSpider{
+
+	private static Logger logger = Logger.getLogger(NasdaqQuoteSpider.class);
 	
 	private static Map<String, String> httpHeaders = null;
-	
-	private final static String STOCK_SYMBOL_REG = "[^$.^]*";
 	
 	static {
 		// set headers of http for nasdaq
@@ -41,33 +31,7 @@ public class NASDAQSpider {
 		httpHeaders.put("Host", "www.nasdaq.com");
 		httpHeaders.put("Origin", "http://www.nasdaq.com");
 	}
-	
-	/**
-	 * Fetch a list of companies base info from nasdaq.
-	 * 
-	 * @return List of CompanyInfoModel, otherwise a empty list.
-	 * @throws HttpException 
-	 */
-	public static List<CompanyModel> fetchCompanyListWithBaseInfo() throws HttpException {
-		List<CompanyModel> result = new ArrayList<>();
-		
-		String response = HttpRequestUtil.getMethod(CommonConstants.URL_GET_COMPANY_LIST_NASDAQ, httpHeaders, CommonConstants.REQUEST_MAX_RETRY_TIMES);
-		String[] lines = response.split(CommonConstants.NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD);
-		for(int i = 1; i < lines.length; ++i) {
-			try{
-				result.add(CompanyModel.parseFromTransportCSV(lines[i]));
-			} catch(Exception e) {
-				// This company is which for nasdaq test or had been bankrupted.
-				logger.error("Invalid company: " + lines[i]);
-			}
-		}
-		// filter invalid company
-		return result.stream()
-				.filter(company -> company.getSymbol().matches(STOCK_SYMBOL_REG) )
-				.collect(Collectors.toList());
-	}
-	
-	
+
 	/**
 	 * Fetch the stock quotes newer than all of quotes in CompanyInfoModel.quoteList.
 	 * 
@@ -76,7 +40,8 @@ public class NASDAQSpider {
 	 * @throws PSException
 	 * @throws HttpException 
 	 */
-	public static List<StockQuoteModel> fetchStockQuotes(String symbol, Integer startDt) throws PSException, HttpException {
+	@Override
+	public List<StockQuoteModel> fetchQuotes(String symbol, Integer startDt) throws HttpException {
 		List<StockQuoteModel> result = null;
 		try {
 			result = fetchHistoricalQuotes(symbol, startDt);
@@ -93,7 +58,6 @@ public class NASDAQSpider {
 		
 		return result;
 	}
-	
 	/**
 	 * Get stock last quotes from startDt to current using parsing html.   
 	 * @param symbol
@@ -102,7 +66,7 @@ public class NASDAQSpider {
 	 * @throws HttpException 
 	 * @throws PSException 
 	 */
-	private static List<StockQuoteModel> fetchLastQuotes(String symbol, Integer startDt) throws HttpException, PSException {
+	private static List<StockQuoteModel> fetchLastQuotes(String symbol, Integer startDt) throws HttpException {
 		final String TABLE_REGX_STR = "<table>\\s*<thead>[\\s\\S]*<tbody>([\\s\\S]*)</tbody>";
 		
 		String baseUrl = combineHistoricalQuotesUrl(symbol);
@@ -110,11 +74,14 @@ public class NASDAQSpider {
 		
 		// truncate string to short string just storing quotes
 		// responseStr = responseStr.substring(105000, responseStr.length() - 30000);
+
+		List<StockQuoteModel> result = new ArrayList<>();
 		
 		Pattern r = Pattern.compile(TABLE_REGX_STR);
 		Matcher m = r.matcher(responseStr);
 		if(!m.find()) {
-			throw new PSException("Content of quotes error!");
+			logger.error("Content of quotes error!");
+			return result;
 		}
 		// parse html table to csv
 		String csv = m.group(1).replaceAll("<tr>(\\s*)<td>", "");
@@ -123,7 +90,6 @@ public class NASDAQSpider {
 		csv = csv.replaceAll("</td>(\\s*)</tr>", "\n");
 		
 		// parse all csv records to model
-		List<StockQuoteModel> result = new ArrayList<>();
 		
 		String[] records = csv.split(CommonConstants.CSV_NEWLINE_REG);
 		// the first line is real-time quote so skip it

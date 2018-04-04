@@ -39,11 +39,8 @@ public class CommonConstants {
 	
 	
 	// --------------- NASDAQ CONSTANTS -------------------------- 
-	public final static String NASDAQ_COMPANY_LIST_SEPRATOR_OF_RECORD = ",[\r]?\n";
 	
 	public final static int NASDAQ_COMPANY_LIST_RECORD_FIELDS_NUMBER = 9;
-	
-	public final static String URL_GET_COMPANY_LIST_NASDAQ = "https://www.nasdaq.com/screening/companies-by-industry.aspx?render=download";
 	
 	public final static String URL_GET_STOCK_QUOTES_NASDAQ_PREFIX = "https://www.nasdaq.com/symbol/";
 	

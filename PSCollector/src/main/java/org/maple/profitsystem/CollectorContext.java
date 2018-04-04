@@ -64,19 +64,10 @@ public class CollectorContext {
 		
 		// check args
 		if(args.length == 1 && args[0].equals(ARG_UPDATE_NOW)) {
-			
-			// update and store all in first time
-			if(companyList.size() == 0) {
-				companyInfoCollector.addListNewCompaniesBaseInfo();
-				companyInfoCollector.updateListCompanyQuotes();
-				companyInfoCollector.updateListCompanyStatistics();
-			} else {
-				// update quotes first
-				companyInfoCollector.updateListCompanyQuotes();
-				
-				companyInfoCollector.addListNewCompaniesBaseInfo();
-				companyInfoCollector.updateListCompanyStatistics();
-			}
+			companyInfoCollector.addListNewCompaniesBaseInfo();
+			companyInfoCollector.updateListCompanyQuotes();
+			companyInfoCollector.updateListCompanyStatistics();
+
 		}
 	}
 	

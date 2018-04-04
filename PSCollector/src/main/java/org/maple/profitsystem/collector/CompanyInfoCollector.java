@@ -28,9 +28,12 @@ import org.maple.profitsystem.models.CompanyStatisticsModel;
 import org.maple.profitsystem.models.StockQuoteModel;
 import org.maple.profitsystem.services.CompanyService;
 import org.maple.profitsystem.services.CompanyStatisticsService;
+import org.maple.profitsystem.spiders.CompanySpider;
 import org.maple.profitsystem.spiders.FINVIZSpider;
-import org.maple.profitsystem.spiders.InvestopediaSpider;
-import org.maple.profitsystem.spiders.NASDAQSpider;
+import org.maple.profitsystem.spiders.QuoteSpider;
+import org.maple.profitsystem.spiders.impl.InvestopediaQuoteSpider;
+import org.maple.profitsystem.spiders.impl.NasdaqCompanySpider;
+import org.maple.profitsystem.spiders.impl.NasdaqQuoteSpider;
 import org.maple.profitsystem.utils.TradingDateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -48,6 +51,11 @@ public class CompanyInfoCollector {
 	
 	private final static int THREAD_POOL_WAIT_MINUTES = 1;
 	
+	private static List<CompanySpider> companySpiders = new ArrayList<>();
+	
+	static {
+		companySpiders.add(new NasdaqCompanySpider());
+	}
 	/**
 	 * The context of the application. 
 	 */
@@ -75,15 +83,15 @@ public class CompanyInfoCollector {
 		List<CompanyModel> newestList = new ArrayList<CompanyModel>();
 		
 		// get new companies
-		try {
-			newestList = NASDAQSpider.fetchCompanyListWithBaseInfo();
-			
-			newestList.removeAll(targetList);
-			
-			Set<CompanyModel> set = new HashSet<>(newestList);
-			newestList = new ArrayList<>(set);
-		} catch (HttpException e) {
-			logger.error("Updated base information of companies failed: " + e.getMessage());
+		for(CompanySpider spider : companySpiders) {
+			try {
+				newestList = spider.fetchCompanyList();
+				newestList.removeAll(targetList);
+				Set<CompanyModel> set = new HashSet<>(newestList);
+				newestList = new ArrayList<>(set);
+			} catch (HttpException e) {
+				logger.error(e.getMessage());
+			}
 		}
 		
 		// add new companies to db
@@ -288,6 +296,8 @@ class CompanyStatisticsUpdateTask implements Runnable {
  */
 class CompanyQuotesUpdateTask implements Runnable {
 	
+	private static List<QuoteSpider> spiders = new ArrayList<>();
+	
 	// count the number of fail companies
 	public static int failCount;
 
@@ -298,6 +308,10 @@ class CompanyQuotesUpdateTask implements Runnable {
 	private CompanyModel company;
 	
 	static {
+		// add spiders
+		spiders.add(new InvestopediaQuoteSpider());
+		spiders.add(new NasdaqQuoteSpider());
+		
 		companyService = Application.springContext.getBean(CompanyService.class);
 	}
 	
@@ -334,38 +348,19 @@ class CompanyQuotesUpdateTask implements Runnable {
 	 * @param company
 	 * @throws PSException 
 	 */
-	private List<StockQuoteModel> fetchNewestStockQuotes() throws PSException {
+	private List<StockQuoteModel> fetchNewestStockQuotes() throws Exception {
 		List<StockQuoteModel> result = null;
-		String errorMsg = "";
 		
-		// Investopedia Spider
-		try {
-			result = InvestopediaSpider.fetchStockQuotes(company.getSymbol(), company.getLastQuoteDt());
-		} catch (HttpException e1) {
-			errorMsg += "Investopedia get failed | ";
-		} catch (PSException e1) {
-			errorMsg += "Investopedia " + e1.getMessage() + " | ";
+		for(QuoteSpider spider : spiders) {
+			try {
+				result = spider.fetchQuotes(company.getSymbol(), company.getLastQuoteDt());
+				if(result != null && result.size() > 0) {
+					return result;
+				}
+			} catch (HttpException e) {
+			}
 		}
-		
-		if(result != null && result.size() > 0) {
-			return result;
-		}
-		
-		// NASDAQ Spider
-		try {
-			// get company quotes
-			result = NASDAQSpider.fetchStockQuotes(company.getSymbol(), company.getLastQuoteDt());
-		} catch (HttpException e) {
-			errorMsg += "Nasdaq get failed | ";
-
-		} catch (PSException e) {
-			errorMsg += "Nasdaq " + e.getMessage() + " | ";
-		}
-		
-		if(result == null || result.size() <= 0) {
-			throw new PSException(errorMsg);
-		}
-		return result;
+		throw new Exception("fetch quotes failed!");
 	}
 	
 }

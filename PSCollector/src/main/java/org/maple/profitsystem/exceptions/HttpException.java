@@ -10,15 +10,18 @@ public class HttpException extends Exception{
 	
 	private String method = null;
 	
-	public HttpException(String url, String method, int retryTimes) {
+	private String errorMsg = null;
+	
+	public HttpException(String url, String method, int retryTimes, String errorMsg) {
 		this.url = url;
 		this.method = method;
 		this.retryTimes = retryTimes;
+		this.errorMsg = errorMsg;
 	}
 	
 	@Override
 	public String getMessage() {
-		return method + " " + url + " after retry " + retryTimes + " times failed.";
+		return "Fail:" + method + " " + url + " after retry " + retryTimes + " times: " + errorMsg;
 	}
 
 	public int getRetryTimes() {
@@ -43,6 +46,14 @@ public class HttpException extends Exception{
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public String getErrorMsg() {
+		return errorMsg;
+	}
+
+	public void setErrorMsg(String errorMsg) {
+		this.errorMsg = errorMsg;
 	}
 
 }
