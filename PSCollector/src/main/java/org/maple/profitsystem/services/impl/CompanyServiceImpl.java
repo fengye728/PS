@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(value = "transactionManager", rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
 public class CompanyServiceImpl implements CompanyService {
 	
 	private static Logger logger = Logger.getLogger(CompanyServiceImpl.class);
@@ -126,6 +125,7 @@ public class CompanyServiceImpl implements CompanyService {
 		return companyModelMapper.selectAll();
 	}
 
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@Override
 	public int addCompanyWithStatistics(CompanyModel record) {
 		if(null == record)  {
@@ -141,6 +141,7 @@ public class CompanyServiceImpl implements CompanyService {
 		}
 	}
 
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@Override
 	public int updateCompany(CompanyModel record) {
 		if(null == record) {
@@ -163,6 +164,7 @@ public class CompanyServiceImpl implements CompanyService {
 		}
 	}
 
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@Override
 	public int addCompanyFullInfo(CompanyModel record) {
 		// add base info and statistics
@@ -184,6 +186,7 @@ public class CompanyServiceImpl implements CompanyService {
 		return count;
 	}
 
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@Override
 	public int updateCompanyWithQuotes(CompanyModel record) {
 		if(null == record || record.getQuoteList() == null || record.getQuoteList().size() == 0) {

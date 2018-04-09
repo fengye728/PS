@@ -3,7 +3,6 @@ package org.maple.profitsystem;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
 import org.maple.profitsystem.collector.CompanyInfoCollector;
@@ -49,7 +48,7 @@ public class CollectorContext {
 		}
 		
 		// set time zone of EST
-		TimeZone.setDefault(TimeZone.getTimeZone("America/New_York"));
+		System.setProperty("user.timezone","America/New_York"); 
 	}
 	
 	public void run(String[] args) {
@@ -65,6 +64,7 @@ public class CollectorContext {
 		// check args
 		if(args.length == 1 && args[0].equals(ARG_UPDATE_NOW)) {
 			companyInfoCollector.addListNewCompaniesBaseInfo();
+			companyInfoCollector.updateOpenInterest();
 			companyInfoCollector.updateListCompanyQuotes();
 			companyInfoCollector.updateListCompanyStatistics();
 
@@ -89,6 +89,11 @@ public class CollectorContext {
 	@Scheduled(cron = "${schedule.cron.persist}", zone = "${schedule.timezone}")
 	public void scheduleBackupToDisk() {
 		storeListCompanyFullInfoToDisk();
+	}
+
+	@Scheduled(cron = "${schedule.crom.oi}", zone = "${schedule.timezone}")
+	public void scheduleUpdateOpenInterest() {
+		companyInfoCollector.updateOpenInterest();
 	}
 	
 	/**

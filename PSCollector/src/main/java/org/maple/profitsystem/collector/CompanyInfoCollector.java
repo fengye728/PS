@@ -25,12 +25,16 @@ import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.models.CompanyStatisticsModel;
+import org.maple.profitsystem.models.OIModel;
 import org.maple.profitsystem.models.StockQuoteModel;
 import org.maple.profitsystem.services.CompanyService;
 import org.maple.profitsystem.services.CompanyStatisticsService;
+import org.maple.profitsystem.services.OpenInterestService;
 import org.maple.profitsystem.spiders.CompanySpider;
 import org.maple.profitsystem.spiders.FINVIZSpider;
+import org.maple.profitsystem.spiders.OISpider;
 import org.maple.profitsystem.spiders.QuoteSpider;
+import org.maple.profitsystem.spiders.impl.InvestopediaOISpider;
 import org.maple.profitsystem.spiders.impl.InvestopediaQuoteSpider;
 import org.maple.profitsystem.spiders.impl.NasdaqCompanySpider;
 import org.maple.profitsystem.spiders.impl.NasdaqQuoteSpider;
@@ -145,13 +149,31 @@ public class CompanyInfoCollector {
 			if(!isNewestQuotes(company)) {
 				executor.execute(new CompanyQuotesUpdateTask(company)); 
 			}
-			// free memory of quotes of the company
-			company.setQuoteList(null);
 		}
 		awaitThreadPool(executor);
 		
 		logger.info("Updated stock quotes of companies completed! Total: " + context.getCompanyList().size() + " Fail: " + CompanyQuotesUpdateTask.failCount);
 		
+		
+	}
+	
+	/**
+	 * Update a list open interest in pscontext.
+	 */
+	public void updateOpenInterest() {
+		logger.info("Updating option open interest...");
+		OpenInterestUpdateTask.failCount = 0;
+		
+		ExecutorService executor = getNewThreadPool();
+		
+		for(CompanyModel company : context.getCompanyList()) {
+			executor.execute(new OpenInterestUpdateTask(company)); 
+
+		}
+		
+		awaitThreadPool(executor);		
+		
+		logger.info("Updated option open interest of companies completed! Total: " + context.getCompanyList().size() + " Fail: " + OpenInterestUpdateTask.failCount);
 		
 	}
 	
@@ -168,24 +190,11 @@ public class CompanyInfoCollector {
 			Date lastDate = TradingDateUtil.convertNumDate2Date(company.getLastQuoteDt());
 			Date nowDt = new Date();
 			int gapDays = TradingDateUtil.betweenTradingDays(lastDate, nowDt);
-			if(gapDays > properties.getQuotesUpdatePeriod()) {
+			if(gapDays >= properties.getQuotesUpdatePeriod()) {
 				return false;
-			} else if(gapDays <= 0) {
-				return true;
 			} else {
-				//Set the close time
-				Calendar nowCloseDt = Calendar.getInstance();
-				nowCloseDt.set(Calendar.HOUR_OF_DAY, 16);
-				nowCloseDt.set(Calendar.MINUTE, 30);
-				nowCloseDt.set(Calendar.SECOND, 0);
-				nowCloseDt.set(Calendar.MILLISECOND, 0);
-				
-				if(nowDt.after(nowCloseDt.getTime())) {
-					return false;
-				} else {
-					return true;
-				}
-			}
+				return true;
+			} 
 		}
 	}
 	
@@ -336,6 +345,9 @@ class CompanyQuotesUpdateTask implements Runnable {
 			// get and set newest quotes
 			company.setQuoteList(fetchNewestStockQuotes());
 			companyService.updateCompanyWithQuotes(company);
+			
+			// free memory of quote list
+			company.setQuoteList(null);
 		} catch(Exception e) {
 			logger.error(company.getSymbol() + ": " + e.getMessage());
 			++failCount;
@@ -362,5 +374,52 @@ class CompanyQuotesUpdateTask implements Runnable {
 		}
 		throw new Exception("fetch quotes failed!");
 	}
+}
+
+class OpenInterestUpdateTask implements Runnable {
 	
+	public static int failCount;
+
+	private static Logger logger = Logger.getLogger(OpenInterestUpdateTask.class);
+	
+	private static List<OISpider> spiders = new ArrayList<>();
+	
+	private static OpenInterestService openInterestService;
+	
+	static {
+		spiders.add(new InvestopediaOISpider());
+		
+		// get service bean from spring context
+		openInterestService = Application.springContext.getBean(OpenInterestService.class);
+	}
+	
+	private CompanyModel company;
+	
+	public OpenInterestUpdateTask(CompanyModel com) {
+		this.company = com;
+	}
+	@Override
+	public void run() {
+		if(company != null) {
+			try {
+				List<OIModel> oiList = fetchOpenInterest();
+				openInterestService.addListOIModel(oiList);
+			} catch (PSException e) {
+				logger.error(e.getMessage());
+				++failCount;
+			}
+		}
+	}
+
+	
+	private List<OIModel> fetchOpenInterest() throws PSException {
+		for(OISpider spider : spiders) {
+			try {
+				return spider.fetchOpenInterest(company);
+			} catch (PSException e) {
+				logger.error("Fail fetching open interest - " + company.getSymbol() + " : " + e.getMessage());
+			}
+		}
+		throw new PSException("Fail to fetch open interest");
+	}
 }

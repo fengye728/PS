@@ -78,8 +78,8 @@ public class TradingDateUtil {
 	 */
 	public static Date convertNumDate2Date(Integer date) {
 		try {
-			DateFormat df = new SimpleDateFormat (CommonConstants.DATE_FORMAT_OUT);
-			return df.parse(String.valueOf(date));
+			DateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_OUT);
+			return sdf.parse(String.valueOf(date));
 		} catch (Exception e) {
 			return null;
 		}
@@ -91,12 +91,12 @@ public class TradingDateUtil {
 	 * @return Integer date formatting yyyyMMdd
 	 */
 	public static Integer convertDate2NumDate(Date date) {
-		DateFormat df = new SimpleDateFormat (CommonConstants.DATE_FORMAT_OUT);
-		return Integer.valueOf(df.format(date));
+		DateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_OUT);
+		return Integer.valueOf(sdf.format(date));
 	}
 	
 	/**
-	 * Check whether market was already opend in the date.
+	 * Check whether market was already opened in the date.
 	 * 
 	 * @param date
 	 * @return

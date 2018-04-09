@@ -8,11 +8,10 @@ import org.maple.profitsystem.services.StockQuoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(value = "transactionManager", rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED, propagation = Propagation.NESTED)
+@Transactional(isolation = Isolation.READ_COMMITTED)
 public class StockQuoteServiceImpl implements StockQuoteService {
 
 	@Autowired
@@ -23,6 +22,7 @@ public class StockQuoteServiceImpl implements StockQuoteService {
 		return stockQuoteModelMapper.selectListByCompanyId(companyId);
 	}
 
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@Override
 	public int addStockQuote(StockQuoteModel record) {
 		if(null == record) {

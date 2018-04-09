@@ -35,7 +35,6 @@ public class InvestopediaQuoteSpider implements QuoteSpider{
 		String baseUrl = combineTargetUrl(symbol, startDt);
 		String responseStr = HttpRequestUtil.getMethod(baseUrl, null, CommonConstants.REQUEST_MAX_RETRY_TIMES);
 		
-		
 		List<StockQuoteModel> result = new ArrayList<>();
 
 		Pattern r = Pattern.compile(TABLE_REGX_STR);
@@ -62,7 +61,7 @@ public class InvestopediaQuoteSpider implements QuoteSpider{
 				result.add(tmp);
 				
 			} catch (Exception e) {
-				logger.error("Parse record failed: " + records[i]);
+				logger.error(symbol + " parse record failed: " + records[i]);
 			}
 		}
 		return result;
@@ -73,10 +72,10 @@ public class InvestopediaQuoteSpider implements QuoteSpider{
 		try{
 			StockQuoteModel result = new StockQuoteModel();
 			result.setQuoteDate(TradingDateUtil.convertDate2NumDate(sdf.parse(fields[0].trim())));
-			result.setOpen(Double.valueOf(fields[1].trim()));
-			result.setHigh(Double.valueOf(fields[2].trim()));
-			result.setLow(Double.valueOf(fields[3].trim()));
-			result.setClose(Double.valueOf(fields[4].trim()));
+			result.setOpen(Double.valueOf(fields[1].trim().replaceAll(",", "")));
+			result.setHigh(Double.valueOf(fields[2].trim().replaceAll(",", "")));
+			result.setLow(Double.valueOf(fields[3].trim().replaceAll(",", "")));
+			result.setClose(Double.valueOf(fields[4].trim().replaceAll(",", "")));
 			result.setVolume(Integer.valueOf(fields[5].trim().replaceAll(",", "")));
 			
 			return result;
