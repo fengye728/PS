@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.maple.profitsystem.constants.CommonConstants;
-import org.maple.profitsystem.exceptions.HttpException;
+import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.StockQuoteModel;
 import org.maple.profitsystem.spiders.QuoteSpider;
 import org.maple.profitsystem.utils.CSVUtil;
@@ -26,48 +26,51 @@ public class InvestopediaQuoteSpider implements QuoteSpider{
 	
 	private static String PARAM_DATE_FORMAT = "MMM dd, yyyy";
 	
-	private static SimpleDateFormat sdf = new SimpleDateFormat(PARAM_DATE_FORMAT, Locale.ENGLISH);
+	private SimpleDateFormat sdf = new SimpleDateFormat(PARAM_DATE_FORMAT, Locale.ENGLISH);
 	
 	@Override
-	public List<StockQuoteModel> fetchQuotes(String symbol, Integer startDt) throws HttpException {
+	public List<StockQuoteModel> fetchQuotes(String symbol, Integer startDt) throws PSException {
 		final String TABLE_REGX_STR = "</th>[\\s]*</tr>([\\s\\S]*)</tbody>";
 		
-		String baseUrl = combineTargetUrl(symbol, startDt);
-		String responseStr = HttpRequestUtil.getMethod(baseUrl, null, CommonConstants.REQUEST_MAX_RETRY_TIMES);
-		
-		List<StockQuoteModel> result = new ArrayList<>();
-
-		Pattern r = Pattern.compile(TABLE_REGX_STR);
-		Matcher m = r.matcher(responseStr);
-		if(!m.find()) {
-			logger.error(symbol + ": Content error!");
-			return result;
-		}
-		// parse html table to csv
-		String csv = m.group(1).replaceAll("<tr.*?>\\s*<td.*?>", "");
-		csv = csv.replaceAll("</td>\\s*?<td.*?>", CommonConstants.CSV_SEPRATOR_BETWEEN_FIELD);
-		csv = csv.replaceAll("\r?\n", "");
-		csv = csv.replaceAll("</td>\\s*</tr>", "\n");
-		
-		// parse all csv records to model
-		
-		String[] records = csv.split(CommonConstants.CSV_NEWLINE_REG);
-		for(int i = 0; i < records.length; ++i) {
-			try {
-				StockQuoteModel tmp = parseFromHtmlCSV(records[i]);
-				if(tmp.getQuoteDate() <= startDt) {
-					break;
-				}
-				result.add(tmp);
-				
-			} catch (Exception e) {
-				logger.error(symbol + " parse record failed: " + records[i]);
+		try {
+			String baseUrl = combineTargetUrl(symbol, startDt);
+			String responseStr = HttpRequestUtil.getMethod(baseUrl, null, CommonConstants.REQUEST_MAX_RETRY_TIMES);
+			
+			List<StockQuoteModel> result = new ArrayList<>();
+			
+			Pattern r = Pattern.compile(TABLE_REGX_STR);
+			Matcher m = r.matcher(responseStr);
+			if(!m.find()) {
+				throw new PSException(symbol + " - content error: " + responseStr.substring(100));
 			}
+			// parse html table to csv
+			String csv = m.group(1).replaceAll("<tr.*?>\\s*<td.*?>", "");
+			csv = csv.replaceAll("</td>\\s*?<td.*?>", CommonConstants.CSV_SEPRATOR_BETWEEN_FIELD);
+			csv = csv.replaceAll("\r?\n", "");
+			csv = csv.replaceAll("</td>\\s*</tr>", "\n");
+			
+			// parse all csv records to model
+			
+			String[] records = csv.split(CommonConstants.CSV_NEWLINE_REG);
+			for(int i = 0; i < records.length; ++i) {
+				try {
+					StockQuoteModel tmp = parseFromHtmlCSV(records[i]);
+					if(tmp.getQuoteDate() <= startDt) {
+						break;
+					}
+					result.add(tmp);
+					
+				} catch (Exception e) {
+					logger.error(symbol + " parse record failed: " + records[i]);
+				}
+			}
+			return result;
+		} catch(Exception e) {
+			throw new PSException(symbol + " - get quote failed: " + e.getMessage());
 		}
-		return result;
 	}
 
-	private static StockQuoteModel parseFromHtmlCSV(String csvRecord) throws Exception {
+	private StockQuoteModel parseFromHtmlCSV(String csvRecord) throws Exception {
 		String[] fields = CSVUtil.splitCSVRecord(csvRecord);
 		try{
 			StockQuoteModel result = new StockQuoteModel();
@@ -85,7 +88,7 @@ public class InvestopediaQuoteSpider implements QuoteSpider{
 	}
 	
 	@SuppressWarnings("deprecation")
-	private static String combineTargetUrl(String symbol, int startDt) {
+	private String combineTargetUrl(String symbol, int startDt) {
 		final int OLDEST_DATE = 19600101;
 		// reset startDt
 		if(startDt < OLDEST_DATE) {

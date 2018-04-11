@@ -3,9 +3,11 @@ package org.maple.profitsystem;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
 import org.maple.profitsystem.collector.CompanyInfoCollector;
+import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.services.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +50,7 @@ public class CollectorContext {
 		}
 		
 		// set time zone of EST
-		System.setProperty("user.timezone","America/New_York"); 
+		TimeZone.setDefault(TimeZone.getTimeZone(CommonConstants.TIMEZONE));
 	}
 	
 	public void run(String[] args) {
@@ -88,10 +90,11 @@ public class CollectorContext {
 	
 	@Scheduled(cron = "${schedule.cron.persist}", zone = "${schedule.timezone}")
 	public void scheduleBackupToDisk() {
-		storeListCompanyFullInfoToDisk();
+		// do not save to disk
+		// storeListCompanyFullInfoToDisk();
 	}
 
-	@Scheduled(cron = "${schedule.crom.oi}", zone = "${schedule.timezone}")
+	@Scheduled(cron = "${schedule.cron.oi}", zone = "${schedule.timezone}")
 	public void scheduleUpdateOpenInterest() {
 		companyInfoCollector.updateOpenInterest();
 	}
@@ -128,10 +131,10 @@ public class CollectorContext {
 	 * @param records
 	 * @return
 	 */
-	private int storeListCompanyFullInfoToDisk() {
-		logger.info("Persist data into disk...");
-		int count = companyService.persistCompanyWithFullInfoListToDisk(companyList);
-		logger.info("Persisted data into disk completely! Count of records: " + count);
-		return count;
-	}
+//	private int storeListCompanyFullInfoToDisk() {
+//		logger.info("Persist data into disk...");
+//		int count = companyService.persistCompanyWithFullInfoListToDisk(companyList);
+//		logger.info("Persisted data into disk completely! Count of records: " + count);
+//		return count;
+//	}
 }

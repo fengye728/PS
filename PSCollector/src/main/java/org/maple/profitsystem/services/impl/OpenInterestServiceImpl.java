@@ -17,11 +17,11 @@ public class OpenInterestServiceImpl implements OpenInterestService {
 	private OIModelMapper mapper;
 
 	@Override
-	public int addListOIModel(List<OIModel> oiModelList) {
+	public int upsertListOIModel(List<OIModel> oiModelList) {
 		int count = 0;
 		if (oiModelList != null) {
 			for(OIModel oiModel : oiModelList) {
-				count += addOIModel(oiModel);
+				count += upsertOIModel(oiModel);
 			}
 		}
 		return count;
@@ -30,10 +30,10 @@ public class OpenInterestServiceImpl implements OpenInterestService {
 
 	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@Override
-	public int addOIModel(OIModel oiModel) {
+	public int upsertOIModel(OIModel oiModel) {
 		if(check(oiModel)) {
 			try {
-				return mapper.insert(oiModel);
+				return mapper.upsert(oiModel);
 			} catch(Exception e) {
 				return 0;
 			}

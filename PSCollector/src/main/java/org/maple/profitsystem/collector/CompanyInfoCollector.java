@@ -345,7 +345,6 @@ class CompanyQuotesUpdateTask implements Runnable {
 			// get and set newest quotes
 			company.setQuoteList(fetchNewestStockQuotes());
 			companyService.updateCompanyWithQuotes(company);
-			
 			// free memory of quote list
 			company.setQuoteList(null);
 		} catch(Exception e) {
@@ -366,10 +365,9 @@ class CompanyQuotesUpdateTask implements Runnable {
 		for(QuoteSpider spider : spiders) {
 			try {
 				result = spider.fetchQuotes(company.getSymbol(), company.getLastQuoteDt());
-				if(result != null && result.size() > 0) {
-					return result;
-				}
-			} catch (HttpException e) {
+				return result;
+			} catch (PSException e) {
+				logger.error(e.getMessage());
 			}
 		}
 		throw new Exception("fetch quotes failed!");
@@ -403,7 +401,7 @@ class OpenInterestUpdateTask implements Runnable {
 		if(company != null) {
 			try {
 				List<OIModel> oiList = fetchOpenInterest();
-				openInterestService.addListOIModel(oiList);
+				openInterestService.upsertListOIModel(oiList);
 			} catch (PSException e) {
 				logger.error(e.getMessage());
 				++failCount;

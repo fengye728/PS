@@ -38,10 +38,9 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 	 * @param company
 	 * @return List of StockQuoteModel
 	 * @throws PSException
-	 * @throws HttpException 
 	 */
 	@Override
-	public List<StockQuoteModel> fetchQuotes(String symbol, Integer startDt) throws HttpException {
+	public List<StockQuoteModel> fetchQuotes(String symbol, Integer startDt) throws PSException{
 		List<StockQuoteModel> result = null;
 		try {
 			result = fetchHistoricalQuotes(symbol, startDt);
@@ -54,7 +53,11 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 		
 		// the other way fetching last period(3 months) quotes from nasdaq
 		
-		result = fetchLastQuotes(symbol, startDt);
+		try {
+			result = fetchLastQuotes(symbol, startDt);
+		} catch (Exception e) {
+			throw new PSException(symbol + " - get quote failed: " + e.getMessage());
+		}
 		
 		return result;
 	}

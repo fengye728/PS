@@ -9,13 +9,15 @@ package org.maple.profitsystem.constants;
 
 public class CommonConstants {
 	
+	public final static String TIMEZONE = "America/New_York";
+	
 	public final static String NULL_STRING = "null";
 	
 	public final static String FILE_PREFIX_STOCK = "STOCK_";
 	
 	public final static int BUFFER_SIZE_OF_READER = 524288;	// 512 * 1024
 	
-	public final static int REQUEST_MAX_RETRY_TIMES = 3;
+	public final static int REQUEST_MAX_RETRY_TIMES = 2;
 	
 	// --------------- Properties Default Value ---------------------
 	public final static int DEFAULT_MAX_THREADS = 5;

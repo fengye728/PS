@@ -6,7 +6,7 @@ import org.maple.profitsystem.models.OIModel;
 
 public interface OpenInterestService {
 	
-	int addOIModel(OIModel oiModel);
+	int upsertOIModel(OIModel oiModel);
 	
-	int addListOIModel(List<OIModel> oiModelList);
+	int upsertListOIModel(List<OIModel> oiModelList);
 }
