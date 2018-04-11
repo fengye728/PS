@@ -32,7 +32,7 @@ public class HttpRequestUtil {
 			URL realUrl = new URL(url);
 			conn = (HttpURLConnection)realUrl.openConnection();
 			conn.setConnectTimeout(REQUEST_TIMEOUT);
-			conn.setReadTimeout(0);
+			conn.setReadTimeout(REQUEST_TIMEOUT);
 			
 			conn.setRequestMethod(method);
 			if(propertyMap != null) {

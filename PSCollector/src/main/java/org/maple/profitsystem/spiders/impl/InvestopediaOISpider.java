@@ -32,6 +32,8 @@ public class InvestopediaOISpider implements OISpider{
 	
 	private final static String DATE_FORMAT = "MM/dd/yyyy";
 	
+	private SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+	
 	// use by all instances
 	private static String token = null; 
 	
@@ -69,7 +71,6 @@ public class InvestopediaOISpider implements OISpider{
 	}
 
 	private List<OIModel> parseOIList(String content, char callPut, long companyId) throws PSException {
-		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
 		List<OIModel> result = new ArrayList<>();
 		String[] records = content.split(CommonConstants.CSV_NEWLINE_REG);
 		for(int i = 1; i < records.length; ++i) {

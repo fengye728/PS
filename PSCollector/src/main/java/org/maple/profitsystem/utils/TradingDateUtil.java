@@ -77,8 +77,8 @@ public class TradingDateUtil {
 	 * @return
 	 */
 	public static Date convertNumDate2Date(Integer date) {
+		DateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_OUT);
 		try {
-			DateFormat sdf = new SimpleDateFormat(CommonConstants.DATE_FORMAT_OUT);
 			return sdf.parse(String.valueOf(date));
 		} catch (Exception e) {
 			return null;
