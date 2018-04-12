@@ -26,8 +26,6 @@ public class InvestopediaQuoteSpider implements QuoteSpider{
 	
 	private static String PARAM_DATE_FORMAT = "MMM dd, yyyy";
 	
-	private SimpleDateFormat sdf = new SimpleDateFormat(PARAM_DATE_FORMAT, Locale.ENGLISH);
-	
 	@Override
 	public List<StockQuoteModel> fetchQuotes(String symbol, Integer startDt) throws PSException {
 		final String TABLE_REGX_STR = "</th>[\\s]*</tr>([\\s\\S]*)</tbody>";
@@ -72,6 +70,7 @@ public class InvestopediaQuoteSpider implements QuoteSpider{
 
 	private StockQuoteModel parseFromHtmlCSV(String csvRecord) throws Exception {
 		String[] fields = CSVUtil.splitCSVRecord(csvRecord);
+		SimpleDateFormat sdf = new SimpleDateFormat(PARAM_DATE_FORMAT, Locale.ENGLISH);
 		try{
 			StockQuoteModel result = new StockQuoteModel();
 			result.setQuoteDate(TradingDateUtil.convertDate2NumDate(sdf.parse(fields[0].trim())));
@@ -89,6 +88,7 @@ public class InvestopediaQuoteSpider implements QuoteSpider{
 	
 	@SuppressWarnings("deprecation")
 	private String combineTargetUrl(String symbol, int startDt) {
+		SimpleDateFormat sdf = new SimpleDateFormat(PARAM_DATE_FORMAT, Locale.ENGLISH);
 		final int OLDEST_DATE = 19600101;
 		// reset startDt
 		if(startDt < OLDEST_DATE) {
