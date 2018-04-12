@@ -32,10 +32,10 @@
     	#{oi,jdbcType=INTEGER}
     	)
     ON CONFLICT ON CONSTRAINT open_interest_unique DO UPDATE SET open = #{open,jdbcType=DOUBLE}
-    	AND high = #{high,jdbcType=DOUBLE}
-    	AND low = #{low,jdbcType=DOUBLE}
-    	AND close = #{close,jdbcType=DOUBLE}
-    	AND volume = #{volume,jdbcType=INTEGER}
-    	AND oi = #{oi,jdbcType=INTEGER}
+    	, high = #{high,jdbcType=DOUBLE}
+    	, low = #{low,jdbcType=DOUBLE}
+    	, close = #{close,jdbcType=DOUBLE}
+    	, volume = #{volume,jdbcType=INTEGER}
+    	, oi = #{oi,jdbcType=INTEGER}
   </insert>
 </mapper>
