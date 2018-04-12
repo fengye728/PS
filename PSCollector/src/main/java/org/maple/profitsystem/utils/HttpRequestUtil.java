@@ -22,6 +22,8 @@ public class HttpRequestUtil {
 	
 	private final static int REQUEST_TIMEOUT = 30000;
 	
+	private final static int READ_TIMEOUT = 360 * 1000;
+	
 	private static String commonMethod(String url, Map<String, String> propertyMap, String data, String method) throws IOException {
 		String result = "";
 		
@@ -32,7 +34,7 @@ public class HttpRequestUtil {
 			URL realUrl = new URL(url);
 			conn = (HttpURLConnection)realUrl.openConnection();
 			conn.setConnectTimeout(REQUEST_TIMEOUT);
-			conn.setReadTimeout(REQUEST_TIMEOUT);
+			conn.setReadTimeout(READ_TIMEOUT);
 			
 			conn.setRequestMethod(method);
 			if(propertyMap != null) {
