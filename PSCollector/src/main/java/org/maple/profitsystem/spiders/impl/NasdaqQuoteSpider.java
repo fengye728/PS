@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.jsoup.Jsoup;
 import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
@@ -42,8 +43,11 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 	@Override
 	public List<StockQuoteModel> fetchQuotes(String symbol, Integer startDt) throws PSException{
 		List<StockQuoteModel> result = null;
+
+		// the other way fetching last period(3 months) quotes from nasdaq
 		try {
-			result = fetchHistoricalQuotes(symbol, startDt);
+			result = fetchLastQuotes(symbol, startDt);
+			
 		} catch (Exception e) {
 		}
 		
@@ -51,10 +55,8 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 			return result;
 		}
 		
-		// the other way fetching last period(3 months) quotes from nasdaq
-		
 		try {
-			result = fetchLastQuotes(symbol, startDt);
+			result = fetchHistoricalQuotes(symbol, startDt);
 		} catch (Exception e) {
 			throw new PSException(symbol + " - get quote failed: " + e.getMessage());
 		}
@@ -73,7 +75,12 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 		final String TABLE_REGX_STR = "<table>\\s*<thead>[\\s\\S]*<tbody>([\\s\\S]*)</tbody>";
 		
 		String baseUrl = combineHistoricalQuotesUrl(symbol);
-		String responseStr = HttpRequestUtil.getMethod(baseUrl, httpHeaders, CommonConstants.REQUEST_MAX_RETRY_TIMES);
+		String responseStr = null;
+		try {
+			responseStr = Jsoup.connect(baseUrl).ignoreContentType(true).execute().body();
+		} catch (Exception e1) {
+			throw new HttpException(baseUrl, "Jsoup GET", 1, e1.getMessage());
+		}
 		
 		// truncate string to short string just storing quotes
 		// responseStr = responseStr.substring(105000, responseStr.length() - 30000);

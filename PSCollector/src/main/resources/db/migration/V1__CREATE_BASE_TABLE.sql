@@ -46,3 +46,6 @@ CREATE TABLE stock_quote
 	CONSTRAINT stock_quote_unique UNIQUE(company_id, quote_date),
 	CONSTRAINT stock_quote_fk FOREIGN KEY(company_id) REFERENCES company(id)
 );
+
+CREATE INDEX stock_quote_company_index ON stock_quote(company_id);
+CREATE INDEX stock_quote_date_index ON stock_quote(quote_date);

@@ -80,6 +80,7 @@ public class HttpRequestUtil {
 	}
 	
 	public static String getMethod(String url, Map<String, String> propertyMap, int retryTime) throws HttpException {
+		
 		boolean requestSuccess = false;
 		String response = null;
 		String errorMsg = null;
@@ -87,7 +88,7 @@ public class HttpRequestUtil {
 			try {
 				response = HttpRequestUtil.commonMethod(url, propertyMap, null, "GET");
 				requestSuccess = true;
-			} catch (IOException e1) {
+			} catch (Exception e1) {
 				errorMsg = e1.getMessage();
 			}
 		}
@@ -105,7 +106,7 @@ public class HttpRequestUtil {
 			try {
 				response = HttpRequestUtil.commonMethod(url, propertyMap, data, "POST");
 				requestSuccess = true;
-			} catch (IOException e1) {
+			} catch (Exception e1) {
 				errorMsg = e1.getMessage();
 			}
 		}

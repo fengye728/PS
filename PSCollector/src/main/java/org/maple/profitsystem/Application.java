@@ -7,6 +7,8 @@
  */
 package org.maple.profitsystem;
 
+import java.io.IOException;
+
 import org.apache.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -23,7 +25,7 @@ public class Application{
 	
 	private static Logger logger = Logger.getLogger(Application.class);
 	
-	public static void main(String[] args){
+	public static void main(String[] args) throws IOException{
 		
 		springContext = SpringApplication.run(Application.class, args);
 		

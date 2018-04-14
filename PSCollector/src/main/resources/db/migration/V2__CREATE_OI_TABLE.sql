@@ -15,4 +15,7 @@ CREATE TABLE open_interest
 	
 	CONSTRAINT open_interest_unique UNIQUE(company_id, oi_date, strike, expiration, call_put),
 	CONSTRAINT open_interest_fk FOREIGN KEY(company_id) REFERENCES company(id) 
-)
+);
+
+CREATE INDEX open_interest_company_index ON open_interest(company_id);
+CREATE INDEX open_interest_date_index ON open_interest(oi_date);

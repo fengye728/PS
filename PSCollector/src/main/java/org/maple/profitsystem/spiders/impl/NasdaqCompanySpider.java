@@ -14,11 +14,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
+import org.jsoup.Jsoup;
 import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.spiders.CompanySpider;
-import org.maple.profitsystem.utils.HttpRequestUtil;
 
 public class NasdaqCompanySpider implements CompanySpider {
 	
@@ -42,7 +42,13 @@ public class NasdaqCompanySpider implements CompanySpider {
 	public List<CompanyModel> fetchCompanyList() throws HttpException {
 		List<CompanyModel> result = new ArrayList<>();
 		
-		String response = HttpRequestUtil.getMethod(URL_GET_COMPANY_LIST_NASDAQ, httpHeaders, CommonConstants.REQUEST_MAX_RETRY_TIMES);
+		String response = null;
+		try {
+			response = Jsoup.connect(URL_GET_COMPANY_LIST_NASDAQ).ignoreContentType(true).execute().body();
+		} catch (Exception e1) {
+			throw new HttpException(URL_GET_COMPANY_LIST_NASDAQ, "Jsoup GET", 1, e1.getMessage());
+		}
+		
 		String[] lines = response.split(CommonConstants.CSV_NEWLINE_REG);
 		for(int i = 1; i < lines.length; ++i) {
 			try{

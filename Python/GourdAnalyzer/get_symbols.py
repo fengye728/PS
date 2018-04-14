@@ -1,7 +1,4 @@
 import psycopg2 as db
-import numpy as np
-import pandas as pd
-
 import time
 
 # SQL select statement
