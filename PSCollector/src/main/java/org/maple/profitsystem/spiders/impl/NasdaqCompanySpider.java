@@ -17,8 +17,10 @@ import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.exceptions.HttpException;
+import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.spiders.CompanySpider;
+import org.maple.profitsystem.utils.CSVUtil;
 
 public class NasdaqCompanySpider implements CompanySpider {
 	
@@ -52,7 +54,7 @@ public class NasdaqCompanySpider implements CompanySpider {
 		String[] lines = response.split(CommonConstants.CSV_NEWLINE_REG);
 		for(int i = 1; i < lines.length; ++i) {
 			try{
-				result.add(CompanyModel.parseFromTransportCSV(lines[i]));
+				result.add(parseCompanyModel(lines[i]));
 			} catch(Exception e) {
 				// This company is which for nasdaq test or had been bankrupted.
 				logger.info("Invalid company: " + lines[i]);
@@ -62,6 +64,30 @@ public class NasdaqCompanySpider implements CompanySpider {
 		return result.stream()
 				.filter(company -> company.getSymbol().matches(STOCK_SYMBOL_REG) )
 				.collect(Collectors.toList());
+	}
+	
+	private CompanyModel parseCompanyModel(String csv) throws PSException {
+		String[] fields = CSVUtil.splitCSVRecord(csv);
+
+		try {
+			CompanyModel result = new CompanyModel();
+			
+			result.setSymbol(fields[0]);
+			result.setName(fields[1]);
+			//result.amountShares = (int) (Double.valueOf(fields[3]) / Double.valueOf(fields[2]));
+			try{
+				result.setIpoYear(Integer.valueOf(fields[5]));
+			} catch(NumberFormatException e){
+				result.setIpoYear(0);
+			}
+			
+			result.setSector(fields[6]);
+			result.setIndustry(fields[7]);
+			
+			return result;
+		} catch(Exception e) {
+			throw new PSException(e.getMessage());
+		}
 	}
 	
 }

@@ -2,6 +2,7 @@ package org.maple.profitsystem.spiders.impl;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,7 +101,7 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 		csv = csv.replaceAll("</td>(\\s*)</tr>", "\n");
 		
 		// parse all csv records to model
-		
+		Integer nowDt = TradingDateUtil.convertDate2NumDate(new Date());
 		String[] records = csv.split(CommonConstants.CSV_NEWLINE_REG);
 		// the first line is real-time quote so skip it
 		for(int i = 1; i < records.length; ++i) {
@@ -108,6 +109,9 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 				StockQuoteModel tmp = parseFromHtmlCSV(records[i]);
 				if(tmp.getQuoteDate() <= startDt) {
 					break;
+				} else if(tmp.getQuoteDate() > nowDt) {
+					// skip error record
+					continue;
 				}
 				result.add(tmp);
 				

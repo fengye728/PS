@@ -48,13 +48,17 @@ public class InvestopediaQuoteSpider implements QuoteSpider{
 			csv = csv.replaceAll("</td>\\s*</tr>", "\n");
 			
 			// parse all csv records to model
-			
+			Integer nowDt = TradingDateUtil.convertDate2NumDate(new Date());
 			String[] records = csv.split(CommonConstants.CSV_NEWLINE_REG);
 			for(int i = 0; i < records.length; ++i) {
 				try {
 					StockQuoteModel tmp = parseFromHtmlCSV(records[i]);
+					
 					if(tmp.getQuoteDate() <= startDt) {
 						break;
+					} else if(tmp.getQuoteDate() > nowDt) {
+						// skip error record
+						continue;
 					}
 					result.add(tmp);
 					
