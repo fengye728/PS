@@ -31,9 +31,10 @@ import org.maple.profitsystem.services.CompanyService;
 import org.maple.profitsystem.services.CompanyStatisticsService;
 import org.maple.profitsystem.services.OpenInterestService;
 import org.maple.profitsystem.spiders.CompanySpider;
-import org.maple.profitsystem.spiders.FINVIZSpider;
 import org.maple.profitsystem.spiders.OISpider;
 import org.maple.profitsystem.spiders.QuoteSpider;
+import org.maple.profitsystem.spiders.StatisticsSpider;
+import org.maple.profitsystem.spiders.impl.FINVIZStatisticsSpider;
 import org.maple.profitsystem.spiders.impl.InvestopediaOISpider;
 import org.maple.profitsystem.spiders.impl.InvestopediaQuoteSpider;
 import org.maple.profitsystem.spiders.impl.NasdaqCompanySpider;
@@ -230,6 +231,8 @@ public class CompanyInfoCollector {
  */
 class CompanyStatisticsUpdateTask implements Runnable {
 
+	private static List<StatisticsSpider> spiders = new ArrayList<>();
+	
 	// count the number of fail companies
 	public static int failCount;
 	
@@ -241,6 +244,9 @@ class CompanyStatisticsUpdateTask implements Runnable {
 	
 	static {
 		companyStatisticsService = Application.springContext.getBean(CompanyStatisticsService.class);
+		
+		// initialize spiders
+		spiders.add(new FINVIZStatisticsSpider());
 	}
 	
 	public CompanyStatisticsUpdateTask(CompanyModel company) {
@@ -276,23 +282,18 @@ class CompanyStatisticsUpdateTask implements Runnable {
 	private CompanyStatisticsModel fetchCompanyStatisticsBySymbol(String symbol) throws PSException {
 		CompanyStatisticsModel result = null;
 		
-		String errorMsg = "";
-		try {
-			// get company statistics info
-			result = FINVIZSpider.fetchCompanyStatistics(symbol);
-		} catch (HttpException e) {
-			errorMsg += "FINVIZ Http failed | ";
-		} catch (PSException e) {
-			errorMsg += e.getMessage();
+		for(StatisticsSpider spider : spiders) {
+			try {
+				result = spider.fetchStatistics(symbol);
+				if(result != null) {
+					return result;
+				}
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+			}
+			
 		}
-		// use YAHOO to fetch ( yahoo is blocked now)
-		// result = YAHOOSpider.fetchCompanyStatistics(symbol);
-		
-		
-		if(result == null) {
-			throw new PSException(errorMsg);
-		}
-		return result;
+		throw new PSException("Update statistics: " + symbol + " failed!");
 	}
 	
 }
@@ -374,6 +375,11 @@ class CompanyQuotesUpdateTask implements Runnable {
 	}
 }
 
+/**
+ * Get open interest of the specified company and update these into database.
+ * @author Maple
+ *
+ */
 class OpenInterestUpdateTask implements Runnable {
 	
 	public static int failCount;

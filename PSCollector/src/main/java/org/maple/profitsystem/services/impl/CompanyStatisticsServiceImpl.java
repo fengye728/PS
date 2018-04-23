@@ -16,6 +16,7 @@ public class CompanyStatisticsServiceImpl implements CompanyStatisticsService {
 
 	@Autowired
 	private CompanyStatisticsModelMapper companyStatisticsModelMapper;
+	
 	@Override
 	public CompanyStatisticsModel getCompanyStatisticsByCompanyId(long companyId) {
 		return companyStatisticsModelMapper.selectByCompanyId(companyId);

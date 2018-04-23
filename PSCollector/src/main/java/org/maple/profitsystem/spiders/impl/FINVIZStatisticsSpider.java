@@ -1,4 +1,4 @@
-package org.maple.profitsystem.spiders;
+package org.maple.profitsystem.spiders.impl;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -7,10 +7,11 @@ import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyStatisticsModel;
+import org.maple.profitsystem.spiders.StatisticsSpider;
 import org.maple.profitsystem.utils.CSVUtil;
 import org.maple.profitsystem.utils.HttpRequestUtil;
 
-public class FINVIZSpider {
+public class FINVIZStatisticsSpider implements StatisticsSpider{
 	
 	private final static int MAX_RETRY_TIMES = 2;
 	
@@ -34,9 +35,15 @@ public class FINVIZSpider {
 	 * @throws HttpException
 	 * @throws PSException
 	 */
-	public static CompanyStatisticsModel fetchCompanyStatistics(String symbol) throws HttpException, PSException {
+	@Override
+	public CompanyStatisticsModel fetchStatistics(String symbol) throws PSException{
 		CompanyStatisticsModel result = new CompanyStatisticsModel();
-		String response = HttpRequestUtil.getMethod(getURLOfCompanyStatistics(symbol), null, MAX_RETRY_TIMES);
+		String response;
+		try {
+			response = HttpRequestUtil.getMethod(getURLOfCompanyStatistics(symbol), null, MAX_RETRY_TIMES);
+		} catch (HttpException e) {
+			throw new PSException(symbol + " fetch statistics failed: " + e.getErrorMsg());
+		}
 		
 		Pattern insiderOwnPat = Pattern.compile(INSIDER_OWN_REG);
 		Pattern instOwnPat = Pattern.compile(INST_OWN_REG);
@@ -73,7 +80,7 @@ public class FINVIZSpider {
 		}
 		
 		if(count == 0) {
-			throw new PSException("No statistics info: " + symbol);
+			throw new PSException("FINVIZ no statistics info: " + symbol);
 		}
 		return result;
 	}
