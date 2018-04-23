@@ -51,14 +51,14 @@ public class YAHOOSpider {
 		// match shares outstanding
 		tmpMatcher = shsOutstandPat.matcher(response);
 		if(tmpMatcher.find()) {
-			result.setShsOutstand(CSVUtil.converDisplayNum2Integer(tmpMatcher.group(1)));
+			result.setShsOutstand(CSVUtil.converDisplayNum2Long(tmpMatcher.group(1)));
 			++count;
 		}
 		
 		// match float shares 
 		tmpMatcher = shsFloatPat.matcher(response);
 		if(tmpMatcher.find()) {
-			result.setShsFloat(CSVUtil.converDisplayNum2Integer(tmpMatcher.group(1)));
+			result.setShsFloat(CSVUtil.converDisplayNum2Long(tmpMatcher.group(1)));
 			++count;
 		}
 		

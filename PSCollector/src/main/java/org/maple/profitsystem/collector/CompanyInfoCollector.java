@@ -34,11 +34,14 @@ import org.maple.profitsystem.spiders.CompanySpider;
 import org.maple.profitsystem.spiders.OISpider;
 import org.maple.profitsystem.spiders.QuoteSpider;
 import org.maple.profitsystem.spiders.StatisticsSpider;
-import org.maple.profitsystem.spiders.impl.FINVIZStatisticsSpider;
-import org.maple.profitsystem.spiders.impl.InvestopediaOISpider;
-import org.maple.profitsystem.spiders.impl.InvestopediaQuoteSpider;
-import org.maple.profitsystem.spiders.impl.NasdaqCompanySpider;
-import org.maple.profitsystem.spiders.impl.NasdaqQuoteSpider;
+import org.maple.profitsystem.spiders.impl.StatisticsSpiderFinviz;
+import org.maple.profitsystem.spiders.impl.StatisticsSpiderMarketWatch;
+import org.maple.profitsystem.spiders.impl.OISpiderInvestopedia;
+import org.maple.profitsystem.spiders.impl.QuoteSpiderFidelity;
+import org.maple.profitsystem.spiders.impl.QuoteSpiderInvestopedia;
+import org.maple.profitsystem.spiders.impl.CompanySpiderNasdaq;
+import org.maple.profitsystem.spiders.impl.QuoteSpiderNasdaq;
+import org.maple.profitsystem.spiders.impl.StatisticsSpiderAdvfn;
 import org.maple.profitsystem.utils.TradingDateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -59,7 +62,7 @@ public class CompanyInfoCollector {
 	private static List<CompanySpider> companySpiders = new ArrayList<>();
 	
 	static {
-		companySpiders.add(new NasdaqCompanySpider());
+		companySpiders.add(new CompanySpiderNasdaq());
 	}
 	/**
 	 * The context of the application. 
@@ -246,7 +249,9 @@ class CompanyStatisticsUpdateTask implements Runnable {
 		companyStatisticsService = Application.springContext.getBean(CompanyStatisticsService.class);
 		
 		// initialize spiders
-		spiders.add(new FINVIZStatisticsSpider());
+		spiders.add(new StatisticsSpiderFinviz());
+		spiders.add(new StatisticsSpiderAdvfn());
+		spiders.add(new StatisticsSpiderMarketWatch());
 	}
 	
 	public CompanyStatisticsUpdateTask(CompanyModel company) {
@@ -319,8 +324,9 @@ class CompanyQuotesUpdateTask implements Runnable {
 	
 	static {
 		// add spiders
-		spiders.add(new InvestopediaQuoteSpider());
-		spiders.add(new NasdaqQuoteSpider());
+		spiders.add(new QuoteSpiderInvestopedia());
+		spiders.add(new QuoteSpiderNasdaq());
+		spiders.add(new QuoteSpiderFidelity());
 		
 		companyService = Application.springContext.getBean(CompanyService.class);
 	}
@@ -391,7 +397,7 @@ class OpenInterestUpdateTask implements Runnable {
 	private static OpenInterestService openInterestService;
 	
 	static {
-		spiders.add(new InvestopediaOISpider());
+		spiders.add(new OISpiderInvestopedia());
 		
 		// get service bean from spring context
 		openInterestService = Application.springContext.getBean(OpenInterestService.class);

@@ -11,8 +11,8 @@
     <result column="company_id" jdbcType="BIGINT" property="companyId" />
     <result column="insider_own_perc" jdbcType="DOUBLE" property="insiderOwnPerc" />
     <result column="inst_own_perc" jdbcType="DOUBLE" property="instOwnPerc" />
-    <result column="shs_outstand" jdbcType="INTEGER" property="shsOutstand" />
-    <result column="shs_float" jdbcType="INTEGER" property="shsFloat" />
+    <result column="shs_outstand" jdbcType="BIGINT" property="shsOutstand" />
+    <result column="shs_float" jdbcType="BIGINT" property="shsFloat" />
     <result column="create_dt" jdbcType="DATE" property="createDt" />
     <result column="last_update_dt" jdbcType="DATE" property="lastUpdateDt" />
   </resultMap>

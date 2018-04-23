@@ -85,10 +85,11 @@ public class CSVUtil {
 	 * @param dispNum
 	 * @return
 	 */
-	public static Integer converDisplayNum2Integer(String dispNum) {
+	public static Long converDisplayNum2Long(String dispNum) {
 		try{
+			dispNum = dispNum.replaceAll(",", "");
 			double number = Double.valueOf(dispNum.substring(0, dispNum.length() - 1));
-			int multiplier = 0;
+			long multiplier = 0;
 			switch(Character.toUpperCase(dispNum.charAt(dispNum.length() - 1))) {
 			case 'K':
 				multiplier = 1000;
@@ -100,7 +101,7 @@ public class CSVUtil {
 				multiplier = 1000000000;
 				break;
 			}
-			return (int) (number * multiplier);
+			return (long) (number * multiplier);
 		} catch(Exception e) {
 			return null;
 		}

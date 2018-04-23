@@ -19,6 +19,8 @@ public class CommonConstants {
 	
 	public final static int REQUEST_MAX_RETRY_TIMES = 2;
 	
+	public final static int MAX_QUOTES_GAP = 3; // the max days between quotes
+	
 	// --------------- Properties Default Value ---------------------
 	public final static int DEFAULT_MAX_THREADS = 5;
 	

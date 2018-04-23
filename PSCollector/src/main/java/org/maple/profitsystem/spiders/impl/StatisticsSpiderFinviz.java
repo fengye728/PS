@@ -11,7 +11,7 @@ import org.maple.profitsystem.spiders.StatisticsSpider;
 import org.maple.profitsystem.utils.CSVUtil;
 import org.maple.profitsystem.utils.HttpRequestUtil;
 
-public class FINVIZStatisticsSpider implements StatisticsSpider{
+public class StatisticsSpiderFinviz implements StatisticsSpider{
 	
 	private final static int MAX_RETRY_TIMES = 2;
 	
@@ -61,22 +61,34 @@ public class FINVIZStatisticsSpider implements StatisticsSpider{
 		// match institutional ownership
 		tmpMatcher = instOwnPat.matcher(response);
 		if(tmpMatcher.find()) {
-			result.setInstOwnPerc(CSVUtil.convertStringPerc2DoublePerc(tmpMatcher.group(1)));
-			++count;
+			try {
+				result.setInstOwnPerc(CSVUtil.convertStringPerc2DoublePerc(tmpMatcher.group(1)));
+				++count;
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		// match shares outstanding
 		tmpMatcher = shsOutstandPat.matcher(response);
 		if(tmpMatcher.find()) {
-			result.setShsOutstand(CSVUtil.converDisplayNum2Integer(tmpMatcher.group(1)));
-			++count;
+			try {
+				result.setShsOutstand(CSVUtil.converDisplayNum2Long(tmpMatcher.group(1)));
+				++count;
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		// match float shares 
 		tmpMatcher = shsFloatPat.matcher(response);
 		if(tmpMatcher.find()) {
-			result.setShsFloat(CSVUtil.converDisplayNum2Integer(tmpMatcher.group(1)));
-			++count;
+			try {
+				result.setShsFloat(CSVUtil.converDisplayNum2Long(tmpMatcher.group(1)));
+				++count;
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		if(count == 0) {

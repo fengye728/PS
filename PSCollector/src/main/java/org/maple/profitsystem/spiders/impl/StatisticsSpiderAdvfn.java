@@ -11,43 +11,50 @@ import org.maple.profitsystem.spiders.StatisticsSpider;
 import org.maple.profitsystem.utils.CSVUtil;
 import org.maple.profitsystem.utils.HttpRequestUtil;
 
-public class MarketWatchStatisticsSpider implements StatisticsSpider{
-
-	private final static String BASE_URL_PATTERN = "https://www.marketwatch.com/investing/stock/{symbol}";
+public class StatisticsSpiderAdvfn implements StatisticsSpider {
+	
+	private final static String BASE_URL_PATTERN = "https://www.advfn.com/stock-market/NYSE/{symbol}/financials";
 	
 	@Override
 	public CompanyStatisticsModel fetchStatistics(String symbol) throws PSException {
-		final String SHS_OUTSTANDING_REG = "<small.*?kv__label.*?>Shares Outstanding</small>[\\s\\S]*?kv__primary.*?>(.*?)</span>";
-		final String SHS_FLOAT_REG = "<small.*?kv__label.*?>Public Float</small>[\\s\\S]*?kv__primary.*?>(.*?)</span>";
+		final String SHS_OUTSTANDING_REG = ">Latest Shares Outstanding</td>[\\s\\S]*?>(.*?)</td>[\\s\\S]*?>(.*?)</td>\\s*?</tr>";
+		final String SHS_FLOAT_REG = ">Float</td>[\\s\\S]*?>(.*?)</td>[\\s\\S]*?>(.*?)</td>\\s*?</tr>";
 		
+
 		CompanyStatisticsModel result = new CompanyStatisticsModel();
-		
 		try {
 			String url = combineUrl(symbol);
 			String content = HttpRequestUtil.getMethod(url, null, CommonConstants.REQUEST_MAX_RETRY_TIMES);
-			Pattern shsOutstandPat = Pattern.compile(SHS_OUTSTANDING_REG);
-			Pattern shsFloatPat = Pattern.compile(SHS_FLOAT_REG);
+			
+			Pattern shsOutstandPtn = Pattern.compile(SHS_OUTSTANDING_REG);
+			Pattern shsFloatPtn = Pattern.compile(SHS_FLOAT_REG);
 			
 			int count = 0;
 			// match shares outstanding
-			Matcher tmpMatcher = shsOutstandPat.matcher(content);
+			Matcher tmpMatcher = shsOutstandPtn.matcher(content);
 			if(tmpMatcher.find()) {
-				result.setShsOutstand(CSVUtil.converDisplayNum2Integer(tmpMatcher.group(1)));
-				++count;
+				try {
+					result.setShsOutstand(CSVUtil.converDisplayNum2Long(tmpMatcher.group(1).trim() + tmpMatcher.group(2).substring(0, 1)));
+					++count;
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
 			}
 			
-			// match shares float
-			tmpMatcher = shsFloatPat.matcher(content);
+			tmpMatcher = shsFloatPtn.matcher(content);
 			if(tmpMatcher.find()) {
-				result.setShsFloat(CSVUtil.converDisplayNum2Integer(tmpMatcher.group(1)));
-				++count;
+				try {
+					result.setShsFloat((CSVUtil.converDisplayNum2Long(tmpMatcher.group(1).trim()  + tmpMatcher.group(2).substring(0, 1))));
+					++count;
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
 			}
 			
 			if(count == 0) {
-				throw new PSException("MarketWatch no statistics info: " + symbol);
+				throw new PSException("Advfn no statistics info: " + symbol);
 			}
 			return result;
-			
 		} catch (HttpException e) {
 			throw new PSException(symbol + " fetch statistics failed: " + e.getErrorMsg());
 		}

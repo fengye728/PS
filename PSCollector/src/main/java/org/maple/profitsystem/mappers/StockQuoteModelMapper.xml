@@ -14,7 +14,7 @@
     <result column="close" jdbcType="DOUBLE" property="close" />
     <result column="high" jdbcType="DOUBLE" property="high" />
     <result column="low" jdbcType="DOUBLE" property="low" />
-    <result column="volume" jdbcType="INTEGER" property="volume" />
+    <result column="volume" jdbcType="BIGINT" property="volume" />
   </resultMap>
   <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.maple.profitsystem.models.StockQuoteModel" useGeneratedKeys="true">
     <!--

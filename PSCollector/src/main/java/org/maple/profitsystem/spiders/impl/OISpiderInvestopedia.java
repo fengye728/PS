@@ -16,9 +16,9 @@ import org.maple.profitsystem.spiders.OISpider;
 import org.maple.profitsystem.utils.HttpRequestUtil;
 import org.maple.profitsystem.utils.TradingDateUtil;
 
-public class InvestopediaOISpider implements OISpider{
+public class OISpiderInvestopedia implements OISpider{
 	
-	private static Logger logger = Logger.getLogger(InvestopediaOISpider.class);
+	private static Logger logger = Logger.getLogger(OISpiderInvestopedia.class);
 
 	private final static String URL_GET_TOKEN = "https://www.investopedia.com/markets/api/token/xignite/encrypted/";
 	
@@ -91,7 +91,7 @@ public class InvestopediaOISpider implements OISpider{
 	
 					result.add(oiModel);
 				} catch(Exception e) {
-					logger.error(e.getMessage() + "|" + records[i]);
+					logger.warn(e.getMessage() + "|" + records[i]);
 				}
 			}
 		}

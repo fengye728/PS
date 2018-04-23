@@ -71,6 +71,10 @@ public class TradingDateUtil {
 		}
 	}
 	
+	public static int betweenDays(Date startDate, Date endDate) {
+		return (int) ((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
+	}
+	
 	/**
 	 * 
 	 * @param date yyyyMMdd

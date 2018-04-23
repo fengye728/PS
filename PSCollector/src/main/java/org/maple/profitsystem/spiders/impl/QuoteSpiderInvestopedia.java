@@ -18,9 +18,9 @@ import org.maple.profitsystem.utils.CSVUtil;
 import org.maple.profitsystem.utils.HttpRequestUtil;
 import org.maple.profitsystem.utils.TradingDateUtil;
 
-public class InvestopediaQuoteSpider implements QuoteSpider{
+public class QuoteSpiderInvestopedia implements QuoteSpider{
 	
-	private static Logger logger = Logger.getLogger(InvestopediaQuoteSpider.class);
+	private static Logger logger = Logger.getLogger(QuoteSpiderInvestopedia.class);
 
 	private static String BASE_URL = "https://www.investopedia.com/markets/api/partial/historical/?Type=Historical+Prices&Timeframe=Daily";
 	
@@ -63,12 +63,20 @@ public class InvestopediaQuoteSpider implements QuoteSpider{
 					result.add(tmp);
 					
 				} catch (Exception e) {
-					logger.error(symbol + " parse record failed: " + records[i]);
+					logger.warn(symbol + " parse record failed: " + records[i]);
 				}
 			}
+			
+			// check if updating the quote failed caused by content error
+			if(result.size() == 0) {
+				if(TradingDateUtil.betweenDays(TradingDateUtil.convertNumDate2Date(startDt), new Date()) > CommonConstants.MAX_QUOTES_GAP) {
+					throw new PSException(symbol + " - Investopedia get quote failed: no records in content");
+				}
+			}
+			
 			return result;
 		} catch(Exception e) {
-			throw new PSException(symbol + " - get quote failed: " + e.getMessage());
+			throw new PSException(symbol + " - Investopedia get quote failed: " + e.getMessage());
 		}
 	}
 
@@ -82,7 +90,7 @@ public class InvestopediaQuoteSpider implements QuoteSpider{
 			result.setHigh(Double.valueOf(fields[2].trim().replaceAll(",", "")));
 			result.setLow(Double.valueOf(fields[3].trim().replaceAll(",", "")));
 			result.setClose(Double.valueOf(fields[4].trim().replaceAll(",", "")));
-			result.setVolume(Integer.valueOf(fields[5].trim().replaceAll(",", "")));
+			result.setVolume(Long.valueOf(fields[5].trim().replaceAll(",", "")));
 			
 			return result;
 		} catch(Exception e) {

@@ -20,9 +20,9 @@ import org.maple.profitsystem.utils.CSVUtil;
 import org.maple.profitsystem.utils.HttpRequestUtil;
 import org.maple.profitsystem.utils.TradingDateUtil;
 
-public class NasdaqQuoteSpider implements QuoteSpider{
+public class QuoteSpiderNasdaq implements QuoteSpider{
 
-	private static Logger logger = Logger.getLogger(NasdaqQuoteSpider.class);
+	private static Logger logger = Logger.getLogger(QuoteSpiderNasdaq.class);
 	
 	private static Map<String, String> httpHeaders = null;
 	
@@ -45,21 +45,21 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 	public List<StockQuoteModel> fetchQuotes(String symbol, Integer startDt) throws PSException{
 		List<StockQuoteModel> result = null;
 
+//		try {
+//			result = fetchHistoricalQuotes(symbol, startDt);
+//			fetchHistoricalQuotes
+//		} catch (Exception e) {
+//		}
+		
+//		if(result != null) {
+//			return result;
+//		}
+		
 		// the other way fetching last period(3 months) quotes from nasdaq
 		try {
 			result = fetchLastQuotes(symbol, startDt);
-			
 		} catch (Exception e) {
-		}
-		
-		if(result != null) {
-			return result;
-		}
-		
-		try {
-			result = fetchHistoricalQuotes(symbol, startDt);
-		} catch (Exception e) {
-			throw new PSException(symbol + " - get quote failed: " + e.getMessage());
+			throw new PSException(symbol + " - Nasdaq get quote failed: " + e.getMessage());
 		}
 		
 		return result;
@@ -91,7 +91,7 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 		Pattern r = Pattern.compile(TABLE_REGX_STR);
 		Matcher m = r.matcher(responseStr);
 		if(!m.find()) {
-			logger.error("Content of quotes error!");
+			logger.warn("Content of quotes error!");
 			return result;
 		}
 		// parse html table to csv
@@ -116,7 +116,7 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 				result.add(tmp);
 				
 			} catch (PSException e) {
-				logger.error("Parse a quote record failed -" + records[i]);
+				logger.warn("Parse a quote record failed -" + records[i]);
 			}
 		}
 		return result;
@@ -188,7 +188,7 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 				result.add(tmp);
 				
 			} catch (PSException e) {
-				logger.error("Parse a quote record failed -" + records[i]);
+				logger.warn("Parse a quote record failed -" + records[i]);
 			}
 		}
 		return result;
@@ -200,7 +200,7 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 			StockQuoteModel result = new StockQuoteModel();
 			result.setQuoteDate(Integer.valueOf(fields[0].replaceAll("/", "")));
 			result.setClose(Double.valueOf(fields[1]));
-			result.setVolume(Double.valueOf(fields[2]).intValue());
+			result.setVolume(Double.valueOf(fields[2]).longValue());
 			result.setOpen(Double.valueOf(fields[3]));
 			result.setHigh(Double.valueOf(fields[4]));
 			result.setLow(Double.valueOf(fields[5]));
@@ -227,7 +227,7 @@ public class NasdaqQuoteSpider implements QuoteSpider{
 			result.setHigh(Double.valueOf(fields[2]));
 			result.setLow(Double.valueOf(fields[3]));
 			result.setClose(Double.valueOf(fields[4]));
-			result.setVolume(Integer.valueOf(fields[5].replaceAll(",", "")));
+			result.setVolume(Long.valueOf(fields[5].replaceAll(",", "")));
 			
 			return result;
 		} catch(Exception e) {

@@ -22,11 +22,11 @@ import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.spiders.CompanySpider;
 import org.maple.profitsystem.utils.CSVUtil;
 
-public class NasdaqCompanySpider implements CompanySpider {
+public class CompanySpiderNasdaq implements CompanySpider {
 	
 	public final static String URL_GET_COMPANY_LIST_NASDAQ = "https://www.nasdaq.com/screening/companies-by-industry.aspx?render=download";
 
-	private static Logger logger = Logger.getLogger(NasdaqCompanySpider.class);
+	private static Logger logger = Logger.getLogger(CompanySpiderNasdaq.class);
 	
 	private static Map<String, String> httpHeaders = null;
 	

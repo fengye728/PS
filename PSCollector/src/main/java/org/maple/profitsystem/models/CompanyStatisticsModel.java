@@ -65,10 +65,10 @@ public class CompanyStatisticsModel {
 				result.instOwnPerc = Double.valueOf(fields[1]);
 			
 			if(!CommonConstants.NULL_STRING.equals(fields[2]))
-				result.shsOutstand = Integer.valueOf(fields[2]);
+				result.shsOutstand = Long.valueOf(fields[2]);
 			
 			if(!CommonConstants.NULL_STRING.equals(fields[3]))
-				result.shsFloat = Integer.valueOf(fields[3]);
+				result.shsFloat = Long.valueOf(fields[3]);
 			
 			return result;
 		} catch(Exception e) {
@@ -119,7 +119,7 @@ public class CompanyStatisticsModel {
      *
      * @mbg.generated Fri Sep 15 15:30:45 CST 2017
      */
-    private Integer shsOutstand;
+    private Long shsOutstand;
 
     /**
      *
@@ -128,7 +128,7 @@ public class CompanyStatisticsModel {
      *
      * @mbg.generated Fri Sep 15 15:30:45 CST 2017
      */
-    private Integer shsFloat;
+    private Long shsFloat;
 
     /**
      *
@@ -252,7 +252,7 @@ public class CompanyStatisticsModel {
      *
      * @mbg.generated Fri Sep 15 15:30:45 CST 2017
      */
-    public Integer getShsOutstand() {
+    public Long getShsOutstand() {
         return shsOutstand;
     }
 
@@ -264,7 +264,7 @@ public class CompanyStatisticsModel {
      *
      * @mbg.generated Fri Sep 15 15:30:45 CST 2017
      */
-    public void setShsOutstand(Integer shsOutstand) {
+    public void setShsOutstand(Long shsOutstand) {
         this.shsOutstand = shsOutstand;
     }
 
@@ -276,7 +276,7 @@ public class CompanyStatisticsModel {
      *
      * @mbg.generated Fri Sep 15 15:30:45 CST 2017
      */
-    public Integer getShsFloat() {
+    public Long getShsFloat() {
         return shsFloat;
     }
 
@@ -288,7 +288,7 @@ public class CompanyStatisticsModel {
      *
      * @mbg.generated Fri Sep 15 15:30:45 CST 2017
      */
-    public void setShsFloat(Integer shsFloat) {
+    public void setShsFloat(Long shsFloat) {
         this.shsFloat = shsFloat;
     }
 
