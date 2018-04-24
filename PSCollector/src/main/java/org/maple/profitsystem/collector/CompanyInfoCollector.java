@@ -21,7 +21,6 @@ import org.apache.log4j.Logger;
 import org.maple.profitsystem.Application;
 import org.maple.profitsystem.CollectorContext;
 import org.maple.profitsystem.ConfigProperties;
-import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
 import org.maple.profitsystem.models.CompanyModel;
 import org.maple.profitsystem.models.CompanyStatisticsModel;
@@ -34,14 +33,15 @@ import org.maple.profitsystem.spiders.CompanySpider;
 import org.maple.profitsystem.spiders.OISpider;
 import org.maple.profitsystem.spiders.QuoteSpider;
 import org.maple.profitsystem.spiders.StatisticsSpider;
-import org.maple.profitsystem.spiders.impl.StatisticsSpiderFinviz;
-import org.maple.profitsystem.spiders.impl.StatisticsSpiderMarketWatch;
+import org.maple.profitsystem.spiders.impl.CompanySpiderFinviz;
+import org.maple.profitsystem.spiders.impl.CompanySpiderNasdaq;
 import org.maple.profitsystem.spiders.impl.OISpiderInvestopedia;
 import org.maple.profitsystem.spiders.impl.QuoteSpiderFidelity;
 import org.maple.profitsystem.spiders.impl.QuoteSpiderInvestopedia;
-import org.maple.profitsystem.spiders.impl.CompanySpiderNasdaq;
 import org.maple.profitsystem.spiders.impl.QuoteSpiderNasdaq;
 import org.maple.profitsystem.spiders.impl.StatisticsSpiderAdvfn;
+import org.maple.profitsystem.spiders.impl.StatisticsSpiderFinviz;
+import org.maple.profitsystem.spiders.impl.StatisticsSpiderMarketWatch;
 import org.maple.profitsystem.utils.TradingDateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -63,6 +63,7 @@ public class CompanyInfoCollector {
 	
 	static {
 		companySpiders.add(new CompanySpiderNasdaq());
+		companySpiders.add(new CompanySpiderFinviz());
 	}
 	/**
 	 * The context of the application. 
@@ -91,25 +92,34 @@ public class CompanyInfoCollector {
 		List<CompanyModel> newestList = new ArrayList<CompanyModel>();
 		
 		// get new companies
+		boolean status = false;
 		for(CompanySpider spider : companySpiders) {
 			try {
 				newestList = spider.fetchCompanyList();
 				newestList.removeAll(targetList);
 				Set<CompanyModel> set = new HashSet<>(newestList);
 				newestList = new ArrayList<>(set);
-			} catch (HttpException e) {
-				logger.error(e.getMessage());
+				
+				// update success
+				status = true;
+				break;
+			} catch (Exception e) {
+				logger.warn(e.getMessage());
 			}
 		}
 		
-		// add new companies to db
-		int count = 0;
-		for(CompanyModel company : newestList) {
-			count += companyService.addCompanyWithStatistics(company);
-			companyStatisticsService.updateCompanyStatistics(company.getStatistics());
+		if(status == false) {
+			logger.error("Updated base information of companies failed!");
+		} else {
+			// add new companies with statistics to db
+			int count = 0;
+			for(CompanyModel company : newestList) {
+				count += companyService.addCompanyWithStatistics(company);
+				companyStatisticsService.updateCompanyStatistics(company.getStatistics());
+			}
+			targetList.addAll(newestList);
+			logger.info("Updated base information of companies success. Count: " + count);
 		}
-		targetList.addAll(newestList);
-		logger.info("Updated base information of companies success. Count: " + count);
 	}
 	
 	/**

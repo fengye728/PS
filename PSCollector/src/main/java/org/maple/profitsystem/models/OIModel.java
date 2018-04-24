@@ -23,14 +23,14 @@ public class OIModel {
 	
 	@Override
 	public String toString() {
-		return this.companyId + "|" + this.oiDate + "|" + this.callPut + "|" + this.strike + "|" + this.expiration ;
+		return this.companyId + "," + this.oiDate + "," + this.callPut + "," + this.strike + "," + this.expiration;
 	}
 	
 	private Long id;
 	
 	private Long companyId;
 	
-	private Integer oiDate;
+	private Integer oiDate;	// yyyyMMdd
 	
 	private Character callPut;
 	

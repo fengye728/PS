@@ -32,6 +32,10 @@ public class CSVUtil {
 			return trimStr.substring(lIndex, rIndex);
 	}
 	
+	public static String[] splitCSVListRecord(String records) {
+		return records.split(CommonConstants.CSV_NEWLINE_REG);
+	}
+	
 	public static String[] splitCSVRecord(String csvRecord) {
 		String[] tmpfields = csvRecord.split(CommonConstants.CSV_SEPRATOR_BETWEEN_FIELD);
 		String[] results = new String[tmpfields.length];

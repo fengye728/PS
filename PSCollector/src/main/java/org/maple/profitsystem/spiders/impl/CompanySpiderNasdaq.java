@@ -74,7 +74,6 @@ public class CompanySpiderNasdaq implements CompanySpider {
 			
 			result.setSymbol(fields[0]);
 			result.setName(fields[1]);
-			//result.amountShares = (int) (Double.valueOf(fields[3]) / Double.valueOf(fields[2]));
 			try{
 				result.setIpoYear(Integer.valueOf(fields[5]));
 			} catch(NumberFormatException e){

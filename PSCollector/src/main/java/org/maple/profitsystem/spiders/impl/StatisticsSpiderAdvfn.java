@@ -3,6 +3,7 @@ package org.maple.profitsystem.spiders.impl;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
 import org.maple.profitsystem.constants.CommonConstants;
 import org.maple.profitsystem.exceptions.HttpException;
 import org.maple.profitsystem.exceptions.PSException;
@@ -12,6 +13,8 @@ import org.maple.profitsystem.utils.CSVUtil;
 import org.maple.profitsystem.utils.HttpRequestUtil;
 
 public class StatisticsSpiderAdvfn implements StatisticsSpider {
+	
+	private static Logger logger = Logger.getLogger(StatisticsSpiderAdvfn.class);
 	
 	private final static String BASE_URL_PATTERN = "https://www.advfn.com/stock-market/NYSE/{symbol}/financials";
 	
@@ -37,17 +40,18 @@ public class StatisticsSpiderAdvfn implements StatisticsSpider {
 					result.setShsOutstand(CSVUtil.converDisplayNum2Long(tmpMatcher.group(1).trim() + tmpMatcher.group(2).substring(0, 1)));
 					++count;
 				} catch(Exception e) {
-					e.printStackTrace();
+					logger.warn(e.getMessage());
 				}
 			}
 			
+			// match float shares
 			tmpMatcher = shsFloatPtn.matcher(content);
 			if(tmpMatcher.find()) {
 				try {
 					result.setShsFloat((CSVUtil.converDisplayNum2Long(tmpMatcher.group(1).trim()  + tmpMatcher.group(2).substring(0, 1))));
 					++count;
 				} catch(Exception e) {
-					e.printStackTrace();
+					logger.warn(e.getMessage());
 				}
 			}
 			

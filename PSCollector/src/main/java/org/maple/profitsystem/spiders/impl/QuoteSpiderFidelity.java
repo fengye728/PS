@@ -42,6 +42,7 @@ public class QuoteSpiderFidelity implements QuoteSpider {
 					if(tmp.getQuoteDate() <= startDt) {
 						break;
 					} else if (tmp.getQuoteDate() > nowDt){
+						// filter some error quote
 						continue;
 					}
 					result.add(tmp);
