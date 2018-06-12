@@ -101,7 +101,7 @@ public class QuoteSpiderInvestopedia implements QuoteSpider{
 	@SuppressWarnings("deprecation")
 	private String combineTargetUrl(String symbol, int startDt) {
 		SimpleDateFormat sdf = new SimpleDateFormat(PARAM_DATE_FORMAT, Locale.ENGLISH);
-		final int OLDEST_DATE = 19600101;
+		final int OLDEST_DATE = 20000101;
 		// reset startDt
 		if(startDt < OLDEST_DATE) {
 			startDt = OLDEST_DATE;
