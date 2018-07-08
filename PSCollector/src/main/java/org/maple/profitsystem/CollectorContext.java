@@ -1,6 +1,5 @@
 package org.maple.profitsystem;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
@@ -44,10 +43,10 @@ public class CollectorContext {
 	// ----------- Public functions ------------------------
 	public void init() {
 		// create stock quote directory
-		File stockQuotesDir = new File(properties.getBackupPath());
-		if(!stockQuotesDir.exists()) {
-			stockQuotesDir.mkdirs();
-		}
+//		File stockQuotesDir = new File(properties.getBackupPath());
+//		if(!stockQuotesDir.exists()) {
+//			stockQuotesDir.mkdirs();
+//		}
 		
 		// set time zone of EST
 		TimeZone.setDefault(TimeZone.getTimeZone(CommonConstants.TIMEZONE));

@@ -14,10 +14,6 @@ public class ConfigProperties {
 	
 	private Integer maxThreads = CommonConstants.DEFAULT_MAX_THREADS;
 
-	public String getBackupPath() {
-		return backupPath;
-	}
-
 	public Integer getStatisticsUpdatePeriod() {
 		return statisticsUpdatePeriod;
 	}
@@ -36,11 +32,6 @@ public class ConfigProperties {
 			this.quotesUpdatePeriod = quotesUpdatePeriod;
 	}
 
-	public void setBackupPath(String backupPath) {
-		if(backupPath != null)
-			this.backupPath = backupPath;
-	}
-
 	public Integer getMaxThreads() {
 		return maxThreads;
 	}
@@ -48,6 +39,14 @@ public class ConfigProperties {
 	public void setMaxThreads(Integer maxThreads) {
 		if(maxThreads != null)		
 			this.maxThreads = maxThreads;
+	}
+
+	public String getBackupPath() {
+		return backupPath;
+	}
+
+	public void setBackupPath(String backupPath) {
+		this.backupPath = backupPath;
 	}
 	
 	
