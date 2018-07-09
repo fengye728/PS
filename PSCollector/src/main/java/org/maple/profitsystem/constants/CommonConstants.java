@@ -41,6 +41,14 @@ public class CommonConstants {
 	public final static String CSV_NEWLINE = "\n";
 	public final static String CSV_NEWLINE_REG = "[\r]?\n";
 	
+	// ---------------- Earning ---------------------------------
+	public final static String EARNING_TIME_BMO = "bmo";
+	public final static String EARNING_TIME_AMC = "amc";
+	
+	public final static int MIN_EARNING_DATE_GAP = 30;
+	
+	// ---------------- Dividend --------------------------------
+	public final static int DIVIDEND_DATE_EXTEND_DAYS = 90;
 	
 	// --------------- NASDAQ CONSTANTS -------------------------- 
 	

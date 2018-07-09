@@ -20,8 +20,8 @@ public class CollectorContext {
 	
 	private static Logger logger = Logger.getLogger(CollectorContext.class);
 	
-	@Autowired
-	private ConfigProperties properties;
+	//@Autowired
+	//private ConfigProperties properties;
 
 	@Autowired
 	private CompanyService companyService;
@@ -56,22 +56,24 @@ public class CollectorContext {
 		init();
 		
 		// load data from db first
-		if(loadListCompanyBaseInfoFromDB() == 0) {
-			// no data in db
-			// then load data from disk
-			loadListCompanyFullInfoFromDisk();
-		}
+//		if(loadListCompanyBaseInfoFromDB() == 0) {
+//			// no data in db
+//			// then load data from disk
+//			loadListCompanyFullInfoFromDisk();
+//		}
+		loadListCompanyBaseInfoFromDB();
 		
 		// check args
 		if(args.length == 1 && args[0].equals(ARG_UPDATE_NOW)) {
 			companyInfoCollector.addListNewCompaniesBaseInfo();
-			companyInfoCollector.updateOpenInterest();
 			companyInfoCollector.updateListCompanyQuotes();
 			companyInfoCollector.updateListCompanyStatistics();
+			companyInfoCollector.updateOpenInterest();
+			companyInfoCollector.updateEarningDate();
 
 		}
 	}
-	
+	// ---------------------- Schedule Task -------------------------------------------
 	@Scheduled(cron = "${schedule.cron.companies}", zone = "${schedule.timezone}")
 	public void scheduleUpdateCompanies() {
 		companyInfoCollector.addListNewCompaniesBaseInfo();
@@ -87,17 +89,29 @@ public class CollectorContext {
 		companyInfoCollector.updateListCompanyQuotes();
 	}
 	
-	@Scheduled(cron = "${schedule.cron.persist}", zone = "${schedule.timezone}")
-	public void scheduleBackupToDisk() {
-		// do not save to disk
-		// storeListCompanyFullInfoToDisk();
-	}
+//	@Scheduled(cron = "${schedule.cron.persist}", zone = "${schedule.timezone}")
+//	public void scheduleBackupToDisk() {
+//		// do not save to disk
+//		storeListCompanyFullInfoToDisk();
+//	}
 
 	@Scheduled(cron = "${schedule.cron.oi}", zone = "${schedule.timezone}")
 	public void scheduleUpdateOpenInterest() {
 		companyInfoCollector.updateOpenInterest();
 	}
 	
+	/**
+	 * Update earning date and dividend date
+	 */
+	@Scheduled(cron = "${schedule.cron.earning}", zone = "${schedule.timezone}")
+	public void scheduleUpdateEarningDate() {
+		companyInfoCollector.updateEarningDate();
+		
+		companyInfoCollector.updateDividendDate();
+		
+	}
+	
+	// ---------------------------- Private Task ----------------------------------
 	/**
 	 * Get all companies base info from database.
 	 */
@@ -112,17 +126,17 @@ public class CollectorContext {
 	 * Recover all companies data from disk.
 	 * 
 	 */
-	private void loadListCompanyFullInfoFromDisk() {
-		// load
-		logger.info("Loading data from disk...");
-		companyList = companyService.loadCompanyWithFullInfoListFromDisk();
-		logger.info("Loaded data from disk completed! Count of records: " + companyList.size());
-		
-		// persist
-		logger.info("Persist data from disk into database...");
-		int persist2dbCount = companyService.addListCompaniesFullInfo(companyList);
-		logger.info("Persisted data from disk into database completely! Count of records: " + persist2dbCount);
-	}
+//	private void loadListCompanyFullInfoFromDisk() {
+//		// load
+//		logger.info("Loading data from disk...");
+//		companyList = companyService.loadCompanyWithFullInfoListFromDisk();
+//		logger.info("Loaded data from disk completed! Count of records: " + companyList.size());
+//		
+//		// persist
+//		logger.info("Persist data from disk into database...");
+//		int persist2dbCount = companyService.addListCompaniesFullInfo(companyList);
+//		logger.info("Persisted data from disk into database completely! Count of records: " + persist2dbCount);
+//	}
 
 	/**
 	 * Store all companies data to disk.

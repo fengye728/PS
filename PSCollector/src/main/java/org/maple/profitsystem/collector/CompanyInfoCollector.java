@@ -191,6 +191,34 @@ public class CompanyInfoCollector {
 		
 	}
 	
+	public void updateEarningDate() {
+		logger.info("Updating earning date...");
+		EarningDateUpdateTask.failCount = 0;
+		
+		ExecutorService executor = getNewThreadPool();
+		
+		for(CompanyModel company : context.getCompanyList()) {
+			executor.execute(new EarningDateUpdateTask(company)); 
+
+		}
+		
+		awaitThreadPool(executor);		
+		
+		logger.info("Updated earning date of companies completed! Total: " + context.getCompanyList().size() + " Fail: " + EarningDateUpdateTask.failCount);
+	}
+	
+	public void updateDividendDate() {
+		logger.info("Updating dividend date...");
+		
+		ExecutorService executor = getNewThreadPool();
+		
+		executor.execute(new DividendDateUpdateTask()); 
+
+		awaitThreadPool(executor);		
+		
+		logger.info("Updated dividend date of companies completed!");
+	}
+	
 	/**
 	 * Test if the quotes of this company is newest.
 	 * @param company
@@ -431,7 +459,6 @@ class OpenInterestUpdateTask implements Runnable {
 		}
 	}
 
-	
 	private List<OIModel> fetchOpenInterest() throws PSException {
 		for(OISpider spider : spiders) {
 			try {
