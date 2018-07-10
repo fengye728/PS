@@ -70,6 +70,7 @@ public class CollectorContext {
 			companyInfoCollector.updateListCompanyStatistics();
 			companyInfoCollector.updateOpenInterest();
 			companyInfoCollector.updateEarningDate();
+			companyInfoCollector.updateDividendDate();
 
 		}
 	}
